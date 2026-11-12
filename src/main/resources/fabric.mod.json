@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "escondite",
+	"version": "${version}",
+	"name": "Escondite",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/escondite/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.yessenia.escondite.Escondite"
+		],
+		"client": [
+			"com.yessenia.escondite.client.EsconditeClient"
+		]
+	},
+	"mixins": [
+		"escondite.mixins.json",
+		{
+			"config": "escondite.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

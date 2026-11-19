@@ -60,17 +60,29 @@ public class ArenaBuilder {
             }
         }
 
-        // 3. Sub-Lobby alineado en Z = 1: 9x9 interior (11x11 exterior), techo de linternas
-        int subX0 = x0 + 2;
-        int subZ0 = z1 + 1;
-        construirSalaIluminada(level, subX0, y0, subZ0, 11, 6, 11, paredState, luzState);
+        int salasZ0 = z1 + 1;
+
+        // 3. Sub-Lobby alineado en Z = 1: 9x9 interior (11x11 exterior), techo iluminado
+        int subX0 = x0 + 1;
+        construirSalaIluminada(level, subX0, y0, salasZ0, 11, 6, 11, paredState, luzState, false);
 
         // 4. Sala de Espera del Buscador alineada en Z = 1: 3x3 interior (5x5 exterior)
-        int busX0 = subX0 + 13;
-        int busZ0 = z1 + 1;
-        construirSalaIluminada(level, busX0, y0, busZ0, 5, 6, 5, paredState, luzState);
+        int busX0 = subX0 + 10;
+        construirSalaIluminada(level, busX0, y0, salasZ0, 5, 6, 5, paredState, luzState, false);
 
-        // 5. Registrar metadatos y spawns en JSON
+        // 5. Sala de Spawn de la Arena alineada en Z = 1: 3x3 interior (5x5 exterior), solo 1 linterna en el centro
+        int spawnX0 = busX0 + 4;
+        construirSalaIluminada(level, spawnX0, y0, salasZ0, 5, 6, 5, paredState, luzState, true);
+
+        // Abrir pasillo de 3x3 entre la Sala de Spawn y el interior de la arena
+        for (int x = spawnX0 + 1; x <= spawnX0 + 3; x++) {
+            for (int y = y0 + 1; y <= y0 + 3; y++) {
+                level.setBlock(new BlockPos(x, y, z1), aireState, 2);
+                level.setBlock(new BlockPos(x, y, salasZ0), aireState, 2);
+            }
+        }
+
+        // 6. Registrar metadatos y spawns en JSON
         ArenaData arena = new ArenaData();
         arena.id = id.toLowerCase();
         arena.nombreDisplay = nombreDisplay;
@@ -84,9 +96,12 @@ public class ArenaBuilder {
         arena.zInicio = z0;
         arena.zFin = z1;
 
-        arena.spawnArena = PosData.fromBlockPos(level, new BlockPos(x0 + ancho / 2, y0 + 1, z0 + largo / 2));
-        arena.spawnSubLobby = PosData.fromBlockPos(level, new BlockPos(subX0 + 5, y0 + 1, subZ0 + 5));
-        arena.spawnEsperaBuscador = PosData.fromBlockPos(level, new BlockPos(busX0 + 2, y0 + 1, busZ0 + 2));
+        PosData posSpawnArena = PosData.fromBlockPos(level, new BlockPos(spawnX0 + 2, y0 + 1, salasZ0 + 2));
+        posSpawnArena.yaw = 180.0f; // Mirando hacia el norte (-Z), directo a la entrada de la arena
+        arena.spawnArena = posSpawnArena;
+
+        arena.spawnSubLobby = PosData.fromBlockPos(level, new BlockPos(subX0 + 5, y0 + 1, salasZ0 + 5));
+        arena.spawnEsperaBuscador = PosData.fromBlockPos(level, new BlockPos(busX0 + 2, y0 + 1, salasZ0 + 2));
 
         ConfigManager.get().arenas.put(arena.id, arena);
         ConfigManager.save();
@@ -94,18 +109,25 @@ public class ArenaBuilder {
         return arena;
     }
 
-    private static void construirSalaIluminada(ServerLevel level, int x0, int y0, int z0, int anchoExt, int altoExt, int largoExt, BlockState pared, BlockState luz) {
+    private static void construirSalaIluminada(ServerLevel level, int x0, int y0, int z0, int anchoExt, int altoExt, int largoExt, BlockState pared, BlockState luz, boolean soloCentroLuz) {
         int x1 = x0 + anchoExt - 1;
         int yTecho = y0 + altoExt - 1;
         int z1 = z0 + largoExt - 1;
+        int centroX = x0 + anchoExt / 2;
+        int centroZ = z0 + largoExt / 2;
 
         for (int x = x0; x <= x1; x++) {
             for (int y = y0; y <= yTecho; y++) {
                 for (int z = z0; z <= z1; z++) {
                     BlockPos pos = new BlockPos(x, y, z);
                     if (y == yTecho) {
-                        boolean esBorde = (x == x0 || x == x1 || z == z0 || z == z1);
-                        level.setBlock(pos, esBorde ? pared : luz, 2);
+                        if (soloCentroLuz) {
+                            boolean esCentro = (x == centroX && z == centroZ);
+                            level.setBlock(pos, esCentro ? luz : pared, 2);
+                        } else {
+                            boolean esBorde = (x == x0 || x == x1 || z == z0 || z == z1);
+                            level.setBlock(pos, esBorde ? pared : luz, 2);
+                        }
                     } else {
                         boolean borde = (x == x0 || x == x1 || y == y0 || z == z0 || z == z1);
                         level.setBlock(pos, borde ? pared : Blocks.AIR.defaultBlockState(), 2);
@@ -130,13 +152,13 @@ public class ArenaBuilder {
             }
         }
 
-        // 2. Limpiar Sub-Lobby (11x11 ext) y Sala del Buscador (5x5 ext) adosadas en zFin + 1
-        int subX0 = arena.xInicio + 2;
-        int busX1 = subX0 + 13 + 4;
+        // 2. Limpiar Sub-Lobby, Sala del Buscador y Sala de Spawn adosadas en zFin + 1
+        int subX0 = arena.xInicio + 1;
+        int salasXFin = Math.max(arena.xFin + 1, subX0 + 19);
         int salasZ0 = arena.zFin + 1;
         int salasZ1 = salasZ0 + 10;
 
-        for (int x = subX0; x <= busX1; x++) {
+        for (int x = subX0; x <= salasXFin; x++) {
             for (int y = arena.yPiso; y <= arena.yPiso + 6; y++) {
                 for (int z = salasZ0; z <= salasZ1; z++) {
                     level.setBlock(new BlockPos(x, y, z), aire, 2);

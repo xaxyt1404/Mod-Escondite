@@ -1,6 +1,7 @@
 package com.yessenia.escondite;
 
 import com.yessenia.escondite.command.EsconditeCommands;
+import com.yessenia.escondite.network.SkinNetworkManager;
 import com.yessenia.escondite.config.ConfigManager;
 import com.yessenia.escondite.game.GameEvents;
 import net.fabricmc.api.ModInitializer;
@@ -16,6 +17,7 @@ public class Escondite implements ModInitializer {
 	public void onInitialize() {
 		ConfigManager.load();
 		GameEvents.register();
+		SkinNetworkManager.registerPayload();
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			EsconditeCommands.register(dispatcher);
 		});

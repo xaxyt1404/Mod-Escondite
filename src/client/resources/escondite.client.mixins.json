@@ -3,7 +3,7 @@
 	"package": "com.yessenia.escondite.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-      "GuiFoodMixin"
+      "GuiFoodMixin", "AbstractClientPlayerMixin", "EntityRenderDispatcherMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

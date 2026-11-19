@@ -5,7 +5,8 @@
 	"mixins": [
 		"ServerPlayerDropMixin",
 		"FoodDataMixin",
-		"SpectatorClickMixin"
+		"SpectatorClickMixin",
+		"FallingBlockMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -12,9 +12,13 @@ import com.yessenia.escondite.game.GameManager;
 import com.yessenia.escondite.item.ItemFactory;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 public class EsconditeCommands {
 
@@ -40,13 +44,33 @@ public class EsconditeCommands {
                                                                         .then(Commands.argument("largo", IntegerArgumentType.integer(20, 200))
                                                                                 .executes(ctx -> {
                                                                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
-                                                                                    String id = StringArgumentType.getString(ctx, "id");
-                                                                                    String nombre = StringArgumentType.getString(ctx, "nombre");
-                                                                                    String bloque = StringArgumentType.getString(ctx, "bloque");
-                                                                                    String skin = StringArgumentType.getString(ctx, "skin");
+                                                                                    String id = StringArgumentType.getString(ctx, "id").toLowerCase();
+                                                                                    String nombre = StringArgumentType.getString(ctx, "nombre").trim();
+                                                                                    String bloque = StringArgumentType.getString(ctx, "bloque").trim();
+                                                                                    String skin = StringArgumentType.getString(ctx, "skin").trim();
                                                                                     int ancho = IntegerArgumentType.getInteger(ctx, "ancho");
                                                                                     int alto = IntegerArgumentType.getInteger(ctx, "alto");
                                                                                     int largo = IntegerArgumentType.getInteger(ctx, "largo");
+
+                                                                                    // 1. Validar que el ID no exista ya
+                                                                                    if (ConfigManager.get().arenas.containsKey(id)) {
+                                                                                        ctx.getSource().sendFailure(Component.literal("§c[Escondite] Ya existe una arena con el ID '" + id + "'. Usa otro ID o elimínala primero con /escondite eliminararena " + id));
+                                                                                        return 0;
+                                                                                    }
+
+                                                                                    String bloqueNuevoId = normalizarBloqueId(bloque);
+
+                                                                                    // 2 y 3. Validar que ni el nombre visible ni el bloque base estén repetidos
+                                                                                    for (ArenaData existente : ConfigManager.get().arenas.values()) {
+                                                                                        if (existente.nombreDisplay != null && existente.nombreDisplay.equalsIgnoreCase(nombre)) {
+                                                                                            ctx.getSource().sendFailure(Component.literal("§c[Escondite] Ya existe una arena llamada '" + existente.nombreDisplay + "' (ID: " + existente.id + ")."));
+                                                                                            return 0;
+                                                                                        }
+                                                                                        if (existente.bloqueBase != null && normalizarBloqueId(existente.bloqueBase).equals(bloqueNuevoId)) {
+                                                                                            ctx.getSource().sendFailure(Component.literal("§c[Escondite] Ya existe una arena con el bloque '" + bloque + "' (Arena: " + existente.nombreDisplay + ", ID: " + existente.id + ")."));
+                                                                                            return 0;
+                                                                                        }
+                                                                                    }
 
                                                                                     ArenaData arena = ArenaBuilder.crearArena(player.serverLevel(), id, nombre, bloque, skin, ancho, alto, largo);
                                                                                     arena.spawnArena.teleport(player, player.getServer());
@@ -171,5 +195,14 @@ public class EsconditeCommands {
                     GameManager.enviarALobbyGeneral(player, player.getServer());
                     return 1;
                 }));
+    }
+
+    private static String normalizarBloqueId(String bloqueRaw) {
+        ResourceLocation rl = ResourceLocation.tryParse(bloqueRaw.toLowerCase());
+        Block bloque = (rl != null) ? BuiltInRegistries.BLOCK.get(rl) : Blocks.AIR;
+        if (bloque == Blocks.AIR) {
+            bloque = Blocks.STONE;
+        }
+        return BuiltInRegistries.BLOCK.getKey(bloque).toString();
     }
 }

@@ -3,6 +3,7 @@ package com.yessenia.escondite.game;
 import com.yessenia.escondite.config.ArenaData;
 import com.yessenia.escondite.config.ConfigManager;
 import com.yessenia.escondite.item.ItemFactory;
+import com.yessenia.escondite.network.SkinNetworkManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
@@ -405,6 +406,10 @@ public class ArenaSession {
             teamEsc.setColor(ChatFormatting.GREEN);
             teamEsc.setNameTagVisibility(Team.Visibility.NEVER);
             scoreboard.addPlayerToTeam(player.getScoreboardName(), teamEsc);
+
+            ArenaSession sesion = GameManager.getSesionDeJugador(player.getUUID());
+            String skinArena = (sesion != null) ? sesion.data.skinEscondido : "";
+            SkinNetworkManager.setSkinJugador(player, skinArena, server);
         } else if (rol == PlayerRole.BUSCADOR) {
             PlayerTeam teamBus = scoreboard.getPlayerTeam("escondite_bus");
             if (teamBus == null) {
@@ -413,6 +418,10 @@ public class ArenaSession {
             teamBus.setColor(ChatFormatting.RED);
             teamBus.setNameTagVisibility(Team.Visibility.ALWAYS);
             scoreboard.addPlayerToTeam(player.getScoreboardName(), teamBus);
+
+            SkinNetworkManager.setSkinJugador(player, "buscador", server);
+        } else {
+            SkinNetworkManager.setSkinJugador(player, "", server);
         }
     }
 

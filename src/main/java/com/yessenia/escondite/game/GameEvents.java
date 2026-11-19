@@ -33,48 +33,93 @@ public class GameEvents {
             GameManager.salirArenaActual(handler.player, server, true);
         });
 
-        // 3. Clic derecho en ítems de interfaz y rotación de cámara espectador
-        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
-            if (!world.isClientSide() && player instanceof ServerPlayer sp && !sp.isCreative()) {
-                ItemStack stack = sp.getItemInHand(hand);
-                String tipo = ItemFactory.getTipoItem(stack);
+        // 3. Clic derecho en ítems de interfaz (funciona mirando al aire y apuntando a bloques)
+        UseItemCallback.EVENT.register((player, world, hand) -> {
+            ItemStack stack = player.getItemInHand(hand);
+            String tipo = ItemFactory.getTipoItem(stack);
+            if (tipo.isEmpty()) return InteractionResultHolder.pass(stack);
 
-                if ("puerta_salir".equals(tipo)) {
+            // En el cliente: devolver SUCCESS obliga a enviar el paquete al servidor al mirar al aire
+            if (world.isClientSide()) {
+                if ("preparacion".equals(tipo) || "galleta_anfitrion".equals(tipo)
+                        || "puerta_salir".equals(tipo) || "pala_terminar".equals(tipo)) {
+                    return InteractionResultHolder.success(stack);
+                }
+                return InteractionResultHolder.pass(stack);
+            }
+
+            if (!(player instanceof ServerPlayer sp)) {
+                return InteractionResultHolder.pass(stack);
+            }
+
+            ArenaSession sesion = GameManager.getSesionDeJugador(sp.getUUID());
+
+            if ("nieve_infinita".equals(tipo)) {
+                sp.getServer().execute(() -> {
+                    if (!sp.isCreative()) sp.getInventory().setItem(1, stack.copyWithCount(16));
+                });
+                return InteractionResultHolder.pass(stack);
+            }
+
+            switch (tipo) {
+                case "preparacion" -> {
+                    if (sesion != null) sesion.toggleListo(sp);
+                    return InteractionResultHolder.success(stack);
+                }
+                case "galleta_anfitrion" -> {
+                    if (sesion != null) sesion.clicGalletaAnfitrion(sp, sp.getServer());
+                    return InteractionResultHolder.success(stack);
+                }
+                case "puerta_salir" -> {
                     GameManager.enviarALobbyGeneral(sp, sp.getServer());
-                    return InteractionResult.FAIL; // Cancela poner la puerta en el suelo
+                    return InteractionResultHolder.success(stack);
                 }
-
-                if ("pala_terminar".equals(tipo)) {
-                    ArenaSession sesion = GameManager.getSesionDeJugador(sp.getUUID());
-                    if (sesion != null) {
-                        sesion.clicPalaTerminar(sp, sp.getServer());
-                    }
-                    return InteractionResult.FAIL; // Cancela aplanar la tierra
-                }
-
-                if ("cohete_infinito".equals(tipo)) {
-                    sp.getServer().execute(() -> {
-                        sp.getInventory().setItem(2, stack.copyWithCount(16));
-                    });
+                case "pala_terminar" -> {
+                    if (sesion != null) sesion.clicPalaTerminar(sp, sp.getServer());
+                    return InteractionResultHolder.success(stack);
                 }
             }
-            return InteractionResult.PASS;
+            return InteractionResultHolder.pass(stack);
         });
 
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
-            if (!world.isClientSide() && player instanceof ServerPlayer sp && !sp.isCreative()) {
-                ItemStack stack = sp.getItemInHand(hand);
-                String tipo = ItemFactory.getTipoItem(stack);
+            ItemStack stack = player.getItemInHand(hand);
+            String tipo = ItemFactory.getTipoItem(stack);
+            if (tipo.isEmpty()) return InteractionResult.PASS;
 
-                if ("puerta_salir".equals(tipo)) {
-                    GameManager.enviarALobbyGeneral(sp, sp.getServer());
-                    return InteractionResult.FAIL; // Cancela poner la puerta en el suelo
+            // En el cliente: devolver SUCCESS evita que se coloque/use el bloque y evita disparar UseItem dos veces
+            if (world.isClientSide()) {
+                if (!player.isCreative() && ("preparacion".equals(tipo) || "galleta_anfitrion".equals(tipo)
+                        || "puerta_salir".equals(tipo) || "pala_terminar".equals(tipo))) {
+                    return InteractionResult.SUCCESS;
                 }
+                return InteractionResult.PASS;
+            }
 
-                if ("cohete_infinito".equals(ItemFactory.getTipoItem(stack))) {
-                    sp.getServer().execute(() -> {
-                        sp.getInventory().setItem(2, stack.copyWithCount(16));
-                    });
+            if (player instanceof ServerPlayer sp && !sp.isCreative()) {
+                ArenaSession sesion = GameManager.getSesionDeJugador(sp.getUUID());
+                switch (tipo) {
+                    case "preparacion" -> {
+                        if (sesion != null) sesion.toggleListo(sp);
+                        return InteractionResult.SUCCESS;
+                    }
+                    case "galleta_anfitrion" -> {
+                        if (sesion != null) sesion.clicGalletaAnfitrion(sp, sp.getServer());
+                        return InteractionResult.SUCCESS;
+                    }
+                    case "puerta_salir" -> {
+                        GameManager.enviarALobbyGeneral(sp, sp.getServer());
+                        return InteractionResult.FAIL; // Cancela poner la puerta en el suelo
+                    }
+                    case "pala_terminar" -> {
+                        if (sesion != null) sesion.clicPalaTerminar(sp, sp.getServer());
+                        return InteractionResult.FAIL; // Cancela aplanar la tierra
+                    }
+                    case "cohete_infinito" -> {
+                        sp.getServer().execute(() -> {
+                            sp.getInventory().setItem(2, stack.copyWithCount(16));
+                        });
+                    }
                 }
             }
             return InteractionResult.PASS;

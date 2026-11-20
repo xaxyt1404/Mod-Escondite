@@ -1,9 +1,11 @@
 package com.yessenia.escondite;
 
 import com.yessenia.escondite.command.EsconditeCommands;
+import com.yessenia.escondite.item.ModItems;
 import com.yessenia.escondite.network.SkinNetworkManager;
 import com.yessenia.escondite.config.ConfigManager;
 import com.yessenia.escondite.game.GameEvents;
+import com.yessenia.escondite.sound.ModSounds;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import org.slf4j.Logger;
@@ -21,6 +23,8 @@ public class Escondite implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			EsconditeCommands.register(dispatcher);
 		});
+		ModSounds.register();
+		ModItems.register();
 		LOGGER.info("Mod Escondite inicializado correctamente.");
 	}
 }

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "escondite:item/baculo_iniciar"
+  },
+  "overrides": [
+    {
+      "predicate": { "escondite:estado": 1.0 },
+      "model": "escondite:item/baculo_anfitrion_cancelar"
+    }
+  ]
+}

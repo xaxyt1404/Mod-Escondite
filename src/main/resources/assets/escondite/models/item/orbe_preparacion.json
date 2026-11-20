@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "escondite:item/orbe_no_listo"
+  },
+  "overrides": [
+    {
+      "predicate": { "escondite:estado": 1.0 },
+      "model": "escondite:item/orbe_preparacion_listo"
+    }
+  ]
+}

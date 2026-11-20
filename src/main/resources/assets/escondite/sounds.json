@@ -1,0 +1,23 @@
+{
+  "latigo_ataque": {
+    "sounds": ["minecraft:item/firecharge/use1", "minecraft:item/firecharge/use2"]
+  },
+  "portal_entrar": {
+    "sounds": ["minecraft:mob/endermen/portal1", "minecraft:mob/endermen/portal2"]
+  },
+  "orbe_listo": {
+    "sounds": ["minecraft:block/amethyst/resonate1"]
+  },
+  "orbe_no_listo": {
+    "sounds": ["minecraft:block/amethyst/break1"]
+  },
+  "ruleta_tick": {
+    "sounds": ["minecraft:random/click"]
+  },
+  "ruleta_ganador": {
+    "sounds": ["minecraft:random/levelup"]
+  },
+  "atrapado": {
+    "sounds": ["minecraft:mob/blaze/hit1"]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "escondite:item/castigo_enrollado"
+  },
+  "overrides": [
+    {
+      "predicate": { "escondite:estirado": 1.0 },
+      "model": "escondite:item/castigo_estirado"
+    }
+  ]
+}

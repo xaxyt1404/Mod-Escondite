@@ -1,5 +1,6 @@
 package com.yessenia.escondite.mixin;
 
+import com.yessenia.escondite.Escondite;
 import com.yessenia.escondite.game.ArenaSession;
 import com.yessenia.escondite.game.GameManager;
 import com.yessenia.escondite.game.PlayerRole;
@@ -23,6 +24,9 @@ public class SpectatorClickMixin {
     @Inject(method = "handleAnimate", at = @At("HEAD"))
     private void alHacerClicIzquierdo(ServerboundSwingPacket packet, CallbackInfo ci) {
         if (player == null || player.getServer() == null) return;
+
+        Escondite.activarLatigo(player);
+
         int tickActual = player.getServer().getTickCount();
         if (tickActual - escondite$ultimoTickRotacion < 5) return;
 

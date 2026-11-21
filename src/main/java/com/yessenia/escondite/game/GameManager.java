@@ -99,6 +99,10 @@ public class GameManager {
         for (ArenaSession sesion : sesiones.values()) {
             sesion.tick(server);
         }
+
+        if (server.getTickCount() % 20 == 0) {
+            com.yessenia.escondite.entity.PortalManager.sincronizarPortales(server);
+        }
     }
 
     public static void eliminarSesion(String arenaId, MinecraftServer server) {

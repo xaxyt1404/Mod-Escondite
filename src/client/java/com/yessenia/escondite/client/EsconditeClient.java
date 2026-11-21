@@ -1,10 +1,15 @@
 package com.yessenia.escondite.client;
 
+import com.yessenia.escondite.client.gui.GestorArenasScreen;
+import com.yessenia.escondite.client.render.PortalArenaRenderer;
+import com.yessenia.escondite.entity.ModEntities;
 import com.yessenia.escondite.item.ModItems;
+import com.yessenia.escondite.network.OpenGestorPayload;
 import com.yessenia.escondite.network.SkinSyncPayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.renderer.item.ClampedItemPropertyFunction;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.component.DataComponents;
@@ -36,6 +41,20 @@ public class EsconditeClient implements ClientModInitializer {
 
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 			ClientSkinStorage.limpiar();
+		});
+
+		// 3. Renderizador del Bloque Flotante (Portal de Arena)
+		EntityRendererRegistry.register(ModEntities.PORTAL_ARENA, PortalArenaRenderer::new);
+
+		// 4. Apertura y actualización en vivo de la ventana del Gestor de Arenas
+		ClientPlayNetworking.registerGlobalReceiver(OpenGestorPayload.TYPE, (payload, context) -> {
+			context.client().execute(() -> {
+				if (context.client().screen instanceof GestorArenasScreen actual) {
+					actual.actualizarDatos(payload.tieneLobbyGeneral(), payload.arenas());
+				} else {
+					context.client().setScreen(new GestorArenasScreen(payload.tieneLobbyGeneral(), payload.arenas()));
+				}
+			});
 		});
 	}
 }

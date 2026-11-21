@@ -7,16 +7,15 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.yessenia.escondite.config.ArenaData;
 import com.yessenia.escondite.config.ConfigManager;
 import com.yessenia.escondite.config.PosData;
+import com.yessenia.escondite.entity.PortalManager;
 import com.yessenia.escondite.game.ArenaBuilder;
 import com.yessenia.escondite.game.GameManager;
-import com.yessenia.escondite.item.ItemFactory;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
@@ -52,7 +51,6 @@ public class EsconditeCommands {
                                                                                     int alto = IntegerArgumentType.getInteger(ctx, "alto");
                                                                                     int largo = IntegerArgumentType.getInteger(ctx, "largo");
 
-                                                                                    // 1. Validar que el ID no exista ya
                                                                                     if (ConfigManager.get().arenas.containsKey(id)) {
                                                                                         ctx.getSource().sendFailure(Component.literal("§c[Escondite] Ya existe una arena con el ID '" + id + "'. Usa otro ID o elimínala primero con /escondite eliminararena " + id));
                                                                                         return 0;
@@ -60,7 +58,6 @@ public class EsconditeCommands {
 
                                                                                     String bloqueNuevoId = normalizarBloqueId(bloque);
 
-                                                                                    // 2 y 3. Validar que ni el nombre visible ni el bloque base estén repetidos
                                                                                     for (ArenaData existente : ConfigManager.get().arenas.values()) {
                                                                                         if (existente.nombreDisplay != null && existente.nombreDisplay.equalsIgnoreCase(nombre)) {
                                                                                             ctx.getSource().sendFailure(Component.literal("§c[Escondite] Ya existe una arena llamada '" + existente.nombreDisplay + "' (ID: " + existente.id + ")."));
@@ -104,6 +101,41 @@ public class EsconditeCommands {
                                             ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Spawn '" + tipo + "' actualizado para " + arena.nombreDisplay), true);
                                             return 1;
                                         }))))
+                .then(Commands.literal("fijarportal")
+                        .requires(src -> src.hasPermission(2))
+                        .then(Commands.argument("id", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                                    String id = StringArgumentType.getString(ctx, "id").toLowerCase();
+                                    ArenaData arena = ConfigManager.get().arenas.get(id);
+                                    if (arena == null) {
+                                        ctx.getSource().sendFailure(Component.literal("§cNo existe la arena '" + id + "'."));
+                                        return 0;
+                                    }
+                                    PosData pos = PosData.fromPlayer(player);
+                                    pos.y += 0.25;
+                                    arena.posPortalLobby = pos;
+                                    ConfigManager.save();
+                                    PortalManager.sincronizarPortales(player.getServer());
+                                    ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Portal flotante de §e" + arena.nombreDisplay + " §afijado en tu posición."), true);
+                                    return 1;
+                                })))
+                .then(Commands.literal("quitarportal")
+                        .requires(src -> src.hasPermission(2))
+                        .then(Commands.argument("id", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    String id = StringArgumentType.getString(ctx, "id").toLowerCase();
+                                    ArenaData arena = ConfigManager.get().arenas.get(id);
+                                    if (arena == null) {
+                                        ctx.getSource().sendFailure(Component.literal("§cNo existe la arena '" + id + "'."));
+                                        return 0;
+                                    }
+                                    arena.posPortalLobby = null;
+                                    ConfigManager.save();
+                                    PortalManager.eliminarPortal(id, ctx.getSource().getServer());
+                                    ctx.getSource().sendSuccess(() -> Component.literal("§e[Escondite] Portal flotante de §f" + arena.nombreDisplay + " §eeliminado."), true);
+                                    return 1;
+                                })))
                 .then(Commands.literal("habilitar")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("id", StringArgumentType.word())
@@ -118,6 +150,7 @@ public class EsconditeCommands {
                                             }
                                             arena.habilitada = estado;
                                             ConfigManager.save();
+                                            PortalManager.sincronizarPortales(ctx.getSource().getServer());
 
                                             ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Arena '" + arena.nombreDisplay + "' habilitada: " + estado), true);
                                             return 1;
@@ -144,10 +177,13 @@ public class EsconditeCommands {
                                     // 1. Sacar jugadores y cerrar sesión activa si existe
                                     GameManager.eliminarSesion(id, ctx.getSource().getServer());
 
-                                    // 2. Limpiar bloques de la estructura en el mundo
+                                    // 2. Eliminar entidad del portal flotante si tenía
+                                    PortalManager.eliminarPortal(id, ctx.getSource().getServer());
+
+                                    // 3. Limpiar bloques de la estructura en el mundo
                                     ArenaBuilder.eliminarEstructuraArena(ctx.getSource().getLevel(), arena);
 
-                                    // 3. Borrar del JSON y guardar
+                                    // 4. Borrar del JSON y guardar
                                     ConfigManager.get().arenas.remove(id);
                                     ConfigManager.save();
 

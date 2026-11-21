@@ -1,6 +1,8 @@
 package com.yessenia.escondite.game;
 
 import com.yessenia.escondite.item.ItemFactory;
+import com.yessenia.escondite.item.ModItems;
+import com.yessenia.escondite.network.AdminNetworkManager;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -36,6 +38,18 @@ public class GameEvents {
         // 3. Clic derecho en ítems de interfaz (funciona mirando al aire y apuntando a bloques)
         UseItemCallback.EVENT.register((player, world, hand) -> {
             ItemStack stack = player.getItemInHand(hand);
+
+            if (stack.is(ModItems.GESTOR_ARENAS)) {
+                if (world.isClientSide()) {
+                    return InteractionResultHolder.success(stack);
+                }
+                if (player instanceof ServerPlayer sp && sp.hasPermissions(2)) {
+                    AdminNetworkManager.abrirVentana(sp);
+                    return InteractionResultHolder.success(stack);
+                }
+                return InteractionResultHolder.pass(stack);
+            }
+
             String tipo = ItemFactory.getTipoItem(stack);
             if (tipo.isEmpty()) return InteractionResultHolder.pass(stack);
 
@@ -84,6 +98,18 @@ public class GameEvents {
 
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
             ItemStack stack = player.getItemInHand(hand);
+
+            if (stack.is(ModItems.GESTOR_ARENAS)) {
+                if (world.isClientSide()) {
+                    return InteractionResult.SUCCESS;
+                }
+                if (player instanceof ServerPlayer sp && sp.hasPermissions(2)) {
+                    AdminNetworkManager.abrirVentana(sp);
+                    return InteractionResult.SUCCESS;
+                }
+                return InteractionResult.PASS;
+            }
+
             String tipo = ItemFactory.getTipoItem(stack);
             if (tipo.isEmpty()) return InteractionResult.PASS;
 

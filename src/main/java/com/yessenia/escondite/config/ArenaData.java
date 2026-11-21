@@ -18,6 +18,7 @@ public class ArenaData {
     public PosData spawnArena;
     public PosData spawnSubLobby;
     public PosData spawnEsperaBuscador;
+    public PosData posPortalLobby = null;
 
     public ArenaData() {}
 }

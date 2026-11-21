@@ -67,7 +67,6 @@ public class GameManager {
         if (ConfigManager.get().lobbyGeneral != null) {
             ConfigManager.get().lobbyGeneral.teleport(player, server);
         }
-        player.getInventory().setItem(0, ItemFactory.crearLibroArenas());
     }
 
     public static void alEntrarServidor(ServerPlayer player, MinecraftServer server) {

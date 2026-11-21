@@ -26,7 +26,7 @@ public class SkinNetworkManager {
             skinsActivas.put(uuid, valor);
         }
 
-        SkinSyncPayload payload = new SkinSyncPayload(uuid, valor);
+        SkinSyncPayload payload = new SkinSyncPayload(uuid, valor, new byte[0]);
         for (ServerPlayer online : server.getPlayerList().getPlayers()) {
             ServerPlayNetworking.send(online, payload);
         }
@@ -34,13 +34,13 @@ public class SkinNetworkManager {
 
     public static void sincronizarTodoAJugador(ServerPlayer receptor) {
         for (Map.Entry<UUID, String> entry : skinsActivas.entrySet()) {
-            ServerPlayNetworking.send(receptor, new SkinSyncPayload(entry.getKey(), entry.getValue()));
+            ServerPlayNetworking.send(receptor, new SkinSyncPayload(entry.getKey(), entry.getValue(), new byte[0]));
         }
     }
 
     public static void limpiarJugador(UUID uuid, MinecraftServer server) {
         if (skinsActivas.remove(uuid) != null && server != null) {
-            SkinSyncPayload payload = new SkinSyncPayload(uuid, "");
+            SkinSyncPayload payload = new SkinSyncPayload(uuid, "", new byte[0]);
             for (ServerPlayer online : server.getPlayerList().getPlayers()) {
                 ServerPlayNetworking.send(online, payload);
             }

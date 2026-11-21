@@ -770,7 +770,6 @@ public class ArenaSession {
                     ConfigManager.get().lobbyGeneral.teleport(p, server);
                 }
                 actualizarEquipoVisual(p, PlayerRole.NINGUNO, server);
-                p.getInventory().setItem(0, ItemFactory.crearLibroArenas());
                 enviarTitle(p, "§6§lPARTIDA TERMINADA", tituloGanador, 5, 60, 15);
             }
         } else {

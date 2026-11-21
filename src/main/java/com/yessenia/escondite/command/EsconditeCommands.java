@@ -119,25 +119,6 @@ public class EsconditeCommands {
                                             arena.habilitada = estado;
                                             ConfigManager.save();
 
-                                            // Actualizar en vivo el Libro de Arenas en el inventario de los jugadores
-                                            for (ServerPlayer p : ctx.getSource().getServer().getPlayerList().getPlayers()) {
-                                                if (GameManager.getSesionDeJugador(p.getUUID()) == null) {
-                                                    ItemStack nuevoLibro = ItemFactory.crearLibroArenas();
-                                                    boolean reemplazado = false;
-                                                    for (int i = 0; i < p.getInventory().getContainerSize(); i++) {
-                                                        if ("libro_arenas".equals(ItemFactory.getTipoItem(p.getInventory().getItem(i)))) {
-                                                            p.getInventory().setItem(i, nuevoLibro);
-                                                            reemplazado = true;
-                                                            break;
-                                                        }
-                                                    }
-                                                    if (!reemplazado && !p.isCreative()) {
-                                                        p.getInventory().setItem(0, nuevoLibro);
-                                                    }
-                                                    p.containerMenu.broadcastFullState();
-                                                }
-                                            }
-
                                             ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Arena '" + arena.nombreDisplay + "' habilitada: " + estado), true);
                                             return 1;
                                         }))))
@@ -169,20 +150,6 @@ public class EsconditeCommands {
                                     // 3. Borrar del JSON y guardar
                                     ConfigManager.get().arenas.remove(id);
                                     ConfigManager.save();
-
-                                    // 4. Actualizar Libro de Arenas en vivo a quienes estén en el Lobby
-                                    for (ServerPlayer p : ctx.getSource().getServer().getPlayerList().getPlayers()) {
-                                        if (GameManager.getSesionDeJugador(p.getUUID()) == null) {
-                                            ItemStack nuevoLibro = ItemFactory.crearLibroArenas();
-                                            for (int i = 0; i < p.getInventory().getContainerSize(); i++) {
-                                                if ("libro_arenas".equals(ItemFactory.getTipoItem(p.getInventory().getItem(i)))) {
-                                                    p.getInventory().setItem(i, nuevoLibro);
-                                                    break;
-                                                }
-                                            }
-                                            p.containerMenu.broadcastFullState();
-                                        }
-                                    }
 
                                     ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Arena '" + arena.nombreDisplay + "' eliminada por completo."), true);
                                     return 1;

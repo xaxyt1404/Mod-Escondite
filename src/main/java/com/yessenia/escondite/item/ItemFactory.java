@@ -22,7 +22,7 @@ public class ItemFactory {
     public static ItemStack crearEtiquetaPreparacion(boolean listo) {
         ItemStack stack = new ItemStack(ModItems.ORBE_PREPARACION);
         stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(listo ? 1 : 0));
-        stack.set(DataComponents.ITEM_NAME, Component.literal(listo ? "§a§lOrbe de Energía: LISTO" : "§c§lOrbe de Energía: NO LISTO"));
+        stack.set(DataComponents.ITEM_NAME, Component.literal(listo ? "§a§lPreparación: LISTO" : "§c§lPreparación: NO LISTO"));
         return stack;
     }
 
@@ -51,7 +51,7 @@ public class ItemFactory {
 
     public static ItemStack crearGestorArenas() {
         ItemStack stack = new ItemStack(ModItems.GESTOR_ARENAS);
-        stack.set(DataComponents.ITEM_NAME, Component.literal("§b§lCubo Teseracto §7(Gestor de Arenas)"));
+        stack.set(DataComponents.ITEM_NAME, Component.literal("§b§lGestor de Arenas"));
         return stack;
     }
 

@@ -3,12 +3,14 @@
 	"package": "com.yessenia.escondite.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-      "GuiFoodMixin", "AbstractClientPlayerMixin", "EntityRenderDispatcherMixin"
+		"GuiFoodMixin",
+		"AbstractClientPlayerMixin",
+		"EntityRenderDispatcherMixin",
+		"InventoryScrollMixin",
+		"InventoryScreenMixin",
+		"SlotPositionMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
-	},
-	"overwrites": {
-		"requireAnnotations": true
 	}
 }

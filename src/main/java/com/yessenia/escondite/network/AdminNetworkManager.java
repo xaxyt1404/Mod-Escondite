@@ -24,6 +24,7 @@ public class AdminNetworkManager {
     public static void register() {
         PayloadTypeRegistry.playS2C().register(OpenGestorPayload.TYPE, OpenGestorPayload.STREAM_CODEC);
         PayloadTypeRegistry.playC2S().register(AdminActionPayload.TYPE, AdminActionPayload.STREAM_CODEC);
+        PayloadTypeRegistry.playS2C().register(HudSyncPayload.TYPE, HudSyncPayload.STREAM_CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(AdminActionPayload.TYPE, (payload, context) -> {
             ServerPlayer player = context.player();

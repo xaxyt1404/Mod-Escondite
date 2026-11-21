@@ -4,6 +4,7 @@ import com.yessenia.escondite.client.gui.GestorArenasScreen;
 import com.yessenia.escondite.client.render.PortalArenaRenderer;
 import com.yessenia.escondite.entity.ModEntities;
 import com.yessenia.escondite.item.ModItems;
+import com.yessenia.escondite.network.HudSyncPayload;
 import com.yessenia.escondite.network.OpenGestorPayload;
 import com.yessenia.escondite.network.SkinSyncPayload;
 import net.fabricmc.api.ClientModInitializer;
@@ -20,7 +21,7 @@ public class EsconditeClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		// 1. Predicados visuales para cambios de modelo en tiempo real
+		// 1. Predicados visuales para cambios de modelo en tiempo real (CustomModelData)
 		ResourceLocation estadoPredicate = ResourceLocation.fromNamespaceAndPath("escondite", "estado");
 		ResourceLocation estiradoPredicate = ResourceLocation.fromNamespaceAndPath("escondite", "estirado");
 		ClampedItemPropertyFunction estadoFn = (stack, level, entity, seed) -> {
@@ -32,18 +33,14 @@ public class EsconditeClient implements ClientModInitializer {
 		ItemProperties.register(ModItems.BACULO_ANFITRION, estadoPredicate, estadoFn);
 		ItemProperties.register(ModItems.CASTIGO, estiradoPredicate, estadoFn);
 
-		// 2. Sincronización de skins dinámicas desde el servidor
+		// 2. Skins dinámicas
 		ClientPlayNetworking.registerGlobalReceiver(SkinSyncPayload.TYPE, (payload, context) -> {
 			context.client().execute(() -> {
 				ClientSkinStorage.actualizarSkin(payload.playerUuid(), payload.skinName(), payload.skinBytes());
 			});
 		});
 
-		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-			ClientSkinStorage.limpiar();
-		});
-
-		// 3. Renderizador del Bloque Flotante (Portal de Arena)
+		// 3. Renderizador del bloque flotante giratorio
 		EntityRendererRegistry.register(ModEntities.PORTAL_ARENA, PortalArenaRenderer::new);
 
 		// 4. Apertura y actualización en vivo de la ventana del Gestor de Arenas
@@ -55,6 +52,16 @@ public class EsconditeClient implements ClientModInitializer {
 					context.client().setScreen(new GestorArenasScreen(payload.tieneLobbyGeneral(), payload.arenas()));
 				}
 			});
+		});
+
+		// 5. Sincronización del HUD (equipos, rol local y reloj)
+		ClientPlayNetworking.registerGlobalReceiver(HudSyncPayload.TYPE, (payload, context) -> {
+			context.client().execute(() -> ClientHudStorage.actualizar(payload));
+		});
+
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+			ClientSkinStorage.limpiar();
+			ClientHudStorage.limpiar();
 		});
 	}
 }

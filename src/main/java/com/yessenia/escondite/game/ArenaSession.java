@@ -19,6 +19,8 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
+import com.yessenia.escondite.network.HudSyncPayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 import java.util.*;
 
@@ -130,6 +132,7 @@ public class ArenaSession {
         indiceCamaraBuscador.remove(uuid);
         infectadosEsperaTicks.remove(uuid);
         actualizarEquipoVisual(player, PlayerRole.NINGUNO, server);
+        ServerPlayNetworking.send(player, new HudSyncPayload(false, "NINGUNO", "", "", 0, List.of(), List.of()));
 
         if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) {
             player.setCamera(player);
@@ -359,6 +362,10 @@ public class ArenaSession {
             case BUSCANDO -> tickFaseBusqueda(server);
             default -> {}
         }
+
+        if (server.getTickCount() % 20 == 0) {
+            sincronizarHudSala(server);
+        }
     }
 
     private void tickCuentaInicio(MinecraftServer server) {
@@ -528,17 +535,12 @@ public class ArenaSession {
     private void tickFaseEscondite(MinecraftServer server) {
         if (ticksRestantes % 20 == 0 && ticksRestantes > 0) {
             int seg = ticksRestantes / 20;
-            boolean enGrande = (seg == 30 || seg == 20 || seg == 10);
-
-            for (UUID id : jugadores) {
-                ServerPlayer p = server.getPlayerList().getPlayer(id);
-                if (p == null) continue;
-
-                if (enGrande) {
-                    enviarTitle(p, "", "§e§l" + seg + " segundos para esconderse", 0, 22, 5);
+            if (seg == 30 || seg == 20 || seg == 10) {
+                for (UUID id : jugadores) {
+                    ServerPlayer p = server.getPlayerList().getPlayer(id);
+                    if (p == null) continue;
+                    enviarTitle(p, "", "§e" + seg + " segundos para esconderse", 0, 22, 5);
                     p.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.MASTER, 1.0f, 1.2f);
-                } else {
-                    p.displayClientMessage(Component.literal("§eEscondiéndose: §f" + seg + "s"), true);
                 }
             }
         }
@@ -579,17 +581,12 @@ public class ArenaSession {
             int seg = totalSeg % 60;
             String formato = String.format("%02d:%02d", min, seg);
 
-            for (UUID id : jugadores) {
-                ServerPlayer p = server.getPlayerList().getPlayer(id);
-                if (p == null) continue;
-
-                if (totalSeg <= 30) {
+            if (totalSeg <= 10) {
+                for (UUID id : jugadores) {
+                    ServerPlayer p = server.getPlayerList().getPlayer(id);
+                    if (p == null) continue;
                     enviarTitle(p, "", "§c§l" + formato, 0, 22, 0);
-                    if (totalSeg <= 10) {
-                        p.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.MASTER, 1.0f, 1.5f);
-                    }
-                } else if (roles.get(id) != PlayerRole.ESPECTADOR_BUSCADOR) {
-                    p.displayClientMessage(Component.literal("§aTiempo restante: §f" + formato), true);
+                    p.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.MASTER, 1.0f, 1.5f);
                 }
             }
         }
@@ -637,6 +634,40 @@ public class ArenaSession {
 
         // 4. Verificar si era el último escondido
         verificarCondicionesFinRonda(server);
+    }
+
+    public void sincronizarHudSala(MinecraftServer server) {
+        boolean activa = (estado == GameState.ESCONDIENDOSE || estado == GameState.BUSCANDO);
+        if (!activa) {
+            for (UUID id : jugadores) {
+                ServerPlayer p = server.getPlayerList().getPlayer(id);
+                if (p != null) {
+                    ServerPlayNetworking.send(p, new HudSyncPayload(false, "NINGUNO", "", "", 0, List.of(), List.of()));
+                }
+            }
+            return;
+        }
+
+        List<String> listaBuscadores = new ArrayList<>();
+        List<String> listaEscondidos = new ArrayList<>();
+        for (UUID id : jugadores) {
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
+            if (p == null) continue;
+            PlayerRole r = roles.getOrDefault(id, PlayerRole.NINGUNO);
+            if (r == PlayerRole.BUSCADOR) listaBuscadores.add(p.getName().getString());
+            else if (r == PlayerRole.ESCONDIDO) listaEscondidos.add(p.getName().getString());
+        }
+
+        String faseTexto = (estado == GameState.ESCONDIENDOSE) ? "Escondiéndose" : "Buscando";
+        int segs = Math.max(0, ticksRestantes / 20);
+        String nombre = data.nombreDisplay != null ? data.nombreDisplay : data.id;
+
+        for (UUID id : jugadores) {
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
+            if (p == null) continue;
+            PlayerRole r = roles.getOrDefault(id, PlayerRole.NINGUNO);
+            ServerPlayNetworking.send(p, new HudSyncPayload(true, r.name(), nombre, faseTexto, segs, listaBuscadores, listaEscondidos));
+        }
     }
 
     // ==================== ESPECTADOR ANCLADO A BUSCADOR ====================

@@ -4,6 +4,7 @@ import com.yessenia.escondite.config.ArenaData;
 import com.yessenia.escondite.config.ConfigManager;
 import com.yessenia.escondite.item.ItemFactory;
 import com.yessenia.escondite.network.SkinNetworkManager;
+import com.yessenia.escondite.sound.ModSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
@@ -208,10 +209,13 @@ public class ArenaSession {
         if (listos.contains(uuid)) {
             listos.remove(uuid);
             player.getInventory().setItem(0, ItemFactory.crearEtiquetaPreparacion(false));
+            player.playNotifySound(com.yessenia.escondite.sound.ModSounds.ORBE_NO_LISTO, SoundSource.MASTER, 1.0f, 1.0f);
         } else {
             listos.add(uuid);
             player.getInventory().setItem(0, ItemFactory.crearEtiquetaPreparacion(true));
+            player.playNotifySound(com.yessenia.escondite.sound.ModSounds.ORBE_LISTO, SoundSource.MASTER, 1.0f, 1.0f);
         }
+
     }
 
     public void clicGalletaAnfitrion(ServerPlayer player, MinecraftServer server) {
@@ -470,10 +474,10 @@ public class ArenaSession {
             if (p != null) {
                 if (esFinal) {
                     enviarTitle(p, "§c§lEl buscador es", "§e§l" + nombreActual, 0, 40, 10);
-                    p.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.MASTER, 1.0f, 1.0f);
+                    p.playNotifySound(ModSounds.RULETA_GANADOR, SoundSource.MASTER, 1.0f, 1.0f);
                 } else {
                     enviarTitle(p, "§c§lEl buscador es", "§f" + nombreActual, 0, 15, 0);
-                    p.playNotifySound(SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.MASTER, 0.7f, 1.4f);
+                    p.playNotifySound(ModSounds.RULETA_TICK, SoundSource.MASTER, 0.7f, 1.4f);
                 }
             }
         }
@@ -626,6 +630,7 @@ public class ArenaSession {
         for (UUID id : jugadores) {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) {
+                p.playNotifySound(ModSounds.ATRAPADO, SoundSource.MASTER, 0.9f, 1.0f);
                 p.displayClientMessage(Component.literal("§c" + nombreVictima + " §ffue atrapado por §c" + nombreAtacante + "§f."), true);
             }
         }

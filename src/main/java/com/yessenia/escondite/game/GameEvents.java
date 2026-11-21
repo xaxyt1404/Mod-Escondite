@@ -41,8 +41,8 @@ public class GameEvents {
 
             // En el cliente: devolver SUCCESS obliga a enviar el paquete al servidor al mirar al aire
             if (world.isClientSide()) {
-                if ("preparacion".equals(tipo) || "galleta_anfitrion".equals(tipo)
-                        || "puerta_salir".equals(tipo) || "pala_terminar".equals(tipo)) {
+                if ("preparacion".equals(tipo) || "anfitrion".equals(tipo)
+                        || "salir".equals(tipo) || "terminar".equals(tipo)) {
                     return InteractionResultHolder.success(stack);
                 }
                 return InteractionResultHolder.pass(stack);
@@ -66,15 +66,15 @@ public class GameEvents {
                     if (sesion != null) sesion.toggleListo(sp);
                     return InteractionResultHolder.success(stack);
                 }
-                case "galleta_anfitrion" -> {
+                case "anfitrion" -> {
                     if (sesion != null) sesion.clicGalletaAnfitrion(sp, sp.getServer());
                     return InteractionResultHolder.success(stack);
                 }
-                case "puerta_salir" -> {
+                case "salir" -> {
                     GameManager.enviarALobbyGeneral(sp, sp.getServer());
                     return InteractionResultHolder.success(stack);
                 }
-                case "pala_terminar" -> {
+                case "terminar" -> {
                     if (sesion != null) sesion.clicPalaTerminar(sp, sp.getServer());
                     return InteractionResultHolder.success(stack);
                 }
@@ -89,8 +89,8 @@ public class GameEvents {
 
             // En el cliente: devolver SUCCESS evita que se coloque/use el bloque y evita disparar UseItem dos veces
             if (world.isClientSide()) {
-                if (!player.isCreative() && ("preparacion".equals(tipo) || "galleta_anfitrion".equals(tipo)
-                        || "puerta_salir".equals(tipo) || "pala_terminar".equals(tipo))) {
+                if (!player.isCreative() && ("preparacion".equals(tipo) || "anfitrion".equals(tipo)
+                        || "salir".equals(tipo) || "terminar".equals(tipo))) {
                     return InteractionResult.SUCCESS;
                 }
                 return InteractionResult.PASS;
@@ -103,15 +103,15 @@ public class GameEvents {
                         if (sesion != null) sesion.toggleListo(sp);
                         return InteractionResult.SUCCESS;
                     }
-                    case "galleta_anfitrion" -> {
+                    case "anfitrion" -> {
                         if (sesion != null) sesion.clicGalletaAnfitrion(sp, sp.getServer());
                         return InteractionResult.SUCCESS;
                     }
-                    case "puerta_salir" -> {
+                    case "salir" -> {
                         GameManager.enviarALobbyGeneral(sp, sp.getServer());
                         return InteractionResult.FAIL; // Cancela poner la puerta en el suelo
                     }
-                    case "pala_terminar" -> {
+                    case "terminar" -> {
                         if (sesion != null) sesion.clicPalaTerminar(sp, sp.getServer());
                         return InteractionResult.FAIL; // Cancela aplanar la tierra
                     }

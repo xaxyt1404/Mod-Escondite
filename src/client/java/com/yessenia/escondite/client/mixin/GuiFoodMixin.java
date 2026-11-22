@@ -83,7 +83,7 @@ public abstract class GuiFoodMixin {
 		return (this.minecraft.getWindow().getGuiScaledWidth() / 2) - 40;
 	}
 
-	// 5. Hotbar dinámica y centrada
+	// 5. Hotbar dinámica y centrada (+1 slot vacío de camuflaje para ESCONDIDOS)
 	@Inject(method = "renderItemHotbar", at = @At("HEAD"), cancellable = true)
 	private void renderizarHotbarDinamica(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 		Player player = this.minecraft.player;
@@ -93,31 +93,40 @@ public abstract class GuiFoodMixin {
 
 		ci.cancel();
 
-		List<Integer> slotsOcupados = new ArrayList<>();
+		boolean esEscondido = ClientHudStorage.enPartidaActiva && "ESCONDIDO".equals(ClientHudStorage.rolLocal);
+		int primerSlotVacio = -1;
+
+		List<Integer> slotsVisibles = new ArrayList<>();
 		for (int i = 0; i < 9; i++) {
 			if (!player.getInventory().getItem(i).isEmpty()) {
-				slotsOcupados.add(i);
+				slotsVisibles.add(i);
+			} else if (primerSlotVacio == -1) {
+				primerSlotVacio = i;
 			}
 		}
 
-		if (slotsOcupados.isEmpty()) {
+		if (esEscondido && primerSlotVacio != -1) {
+			slotsVisibles.add(primerSlotVacio);
+		}
+
+		if (slotsVisibles.isEmpty()) {
 			return;
 		}
 
-		if (!slotsOcupados.contains(player.getInventory().selected)) {
-			player.getInventory().selected = slotsOcupados.get(0);
+		if (!slotsVisibles.contains(player.getInventory().selected)) {
+			player.getInventory().selected = slotsVisibles.get(0);
 		}
 
 		int screenW = guiGraphics.guiWidth();
 		int screenH = guiGraphics.guiHeight();
 		int paso = 20;
-		int totalW = (slotsOcupados.size() * paso) - 2;
+		int totalW = (slotsVisibles.size() * paso) - 2;
 		int startX = (screenW - totalW) / 2;
 		int y = screenH - 21;
 
 		// Casillas con diseño oscuro/celeste
-		for (int idx = 0; idx < slotsOcupados.size(); idx++) {
-			int realSlot = slotsOcupados.get(idx);
+		for (int idx = 0; idx < slotsVisibles.size(); idx++) {
+			int realSlot = slotsVisibles.get(idx);
 			boolean seleccionado = (realSlot == player.getInventory().selected);
 			int slotX = startX + (idx * paso);
 
@@ -130,11 +139,14 @@ public abstract class GuiFoodMixin {
 
 		// Ítems dentro de cada casilla
 		int seed = 1;
-		for (int idx = 0; idx < slotsOcupados.size(); idx++) {
-			int realSlot = slotsOcupados.get(idx);
-			int itemX = startX + (idx * paso) + 1;
-			int itemY = y + 1;
-			this.renderSlot(guiGraphics, itemX, itemY, deltaTracker, player, player.getInventory().getItem(realSlot), seed++);
+		for (int idx = 0; idx < slotsVisibles.size(); idx++) {
+			int realSlot = slotsVisibles.get(idx);
+			ItemStack stack = player.getInventory().getItem(realSlot);
+			if (!stack.isEmpty()) {
+				int itemX = startX + (idx * paso) + 1;
+				int itemY = y + 1;
+				this.renderSlot(guiGraphics, itemX, itemY, deltaTracker, player, stack, seed++);
+			}
 		}
 	}
 
@@ -157,7 +169,6 @@ public abstract class GuiFoodMixin {
 		String headerBuscadores = "Buscadores (" + ClientHudStorage.buscadores.size() + "):";
 		String headerEscondidos = "Escondidos (" + ClientHudStorage.escondidos.size() + "):";
 
-		// Calcular ancho dinámicamente según el texto más largo
 		int maxTextoW = Math.max(font.width(ClientHudStorage.nombreArena), font.width(ClientHudStorage.fase));
 		maxTextoW = Math.max(maxTextoW, (int) Math.ceil(font.width(relojTexto) * 1.15f));
 		maxTextoW = Math.max(maxTextoW, font.width(headerBuscadores));
@@ -172,7 +183,6 @@ public abstract class GuiFoodMixin {
 
 		int anchoPanel = Math.max(82, maxTextoW + 14);
 
-		// Calcular alto dinámicamente según la cantidad de jugadores en ambos equipos
 		int filasBuscadores = Math.max(1, ClientHudStorage.buscadores.size());
 		int filasEscondidos = Math.max(1, ClientHudStorage.escondidos.size());
 		int altoPanel = 66 + ((filasBuscadores + filasEscondidos) * 10);
@@ -180,16 +190,13 @@ public abstract class GuiFoodMixin {
 		int x = screenW - anchoPanel - 5;
 		int y = (screenH - altoPanel) / 2;
 
-		// Fondo translúcido y borde celeste
 		graphics.fill(x, y, x + anchoPanel, y + altoPanel, 0x7A101520);
 		graphics.renderOutline(x, y, anchoPanel, altoPanel, 0xAA38BDF8);
 		graphics.fill(x + 1, y + 1, x + anchoPanel - 1, y + 13, 0x881E293B);
 
-		// Arena y Fase
 		graphics.drawCenteredString(font, "§b" + ClientHudStorage.nombreArena, x + anchoPanel / 2, y + 3, 0xFFFFFF);
 		graphics.drawCenteredString(font, "§7" + ClientHudStorage.fase, x + anchoPanel / 2, y + 16, 0xCCCCCC);
 
-		// Solo el reloj (rojo y ligeramente más grande en los últimos 30 segundos)
 		int relojY = y + 27;
 		if (ultimos30) {
 			graphics.pose().pushPose();
@@ -205,7 +212,6 @@ public abstract class GuiFoodMixin {
 
 		int cursorY = y + 39;
 
-		// Equipo Buscadores
 		graphics.drawString(font, "§c" + headerBuscadores, x + 5, cursorY, 0xFF5555);
 		cursorY += 10;
 		if (ClientHudStorage.buscadores.isEmpty()) {
@@ -220,7 +226,6 @@ public abstract class GuiFoodMixin {
 
 		cursorY += 3;
 
-		// Equipo Escondidos
 		graphics.drawString(font, "§a" + headerEscondidos, x + 5, cursorY, 0x55FF55);
 		cursorY += 10;
 		if (ClientHudStorage.escondidos.isEmpty()) {

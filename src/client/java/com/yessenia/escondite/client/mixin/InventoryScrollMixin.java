@@ -1,5 +1,6 @@
 package com.yessenia.escondite.client.mixin;
 
+import com.yessenia.escondite.client.ClientHudStorage;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Final;
@@ -26,12 +27,24 @@ public abstract class InventoryScrollMixin {
         }
 
         Inventory inv = (Inventory) (Object) this;
+        boolean esEscondido = ClientHudStorage.enPartidaActiva && "ESCONDIDO".equals(ClientHudStorage.rolLocal);
+
+        int slotVacioCamuflaje = -1;
+        if (esEscondido) {
+            for (int i = 0; i < 9; i++) {
+                if (inv.getItem(i).isEmpty()) {
+                    slotVacioCamuflaje = i;
+                    break;
+                }
+            }
+        }
+
         int paso = direction > 0 ? -1 : 1;
         int candidato = this.selected;
 
         for (int intentos = 0; intentos < 9; intentos++) {
             candidato = (candidato + paso + 9) % 9;
-            if (!inv.getItem(candidato).isEmpty()) {
+            if (!inv.getItem(candidato).isEmpty() || candidato == slotVacioCamuflaje) {
                 this.selected = candidato;
                 ci.cancel();
                 return;

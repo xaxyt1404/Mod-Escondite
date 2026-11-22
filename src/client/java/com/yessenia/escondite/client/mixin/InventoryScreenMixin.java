@@ -1,5 +1,6 @@
 package com.yessenia.escondite.client.mixin;
 
+import com.yessenia.escondite.client.ClientHudStorage;
 import com.yessenia.escondite.client.SlotPosition;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
@@ -46,7 +47,6 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
     private void limpiarYCentrarInventario(CallbackInfo ci) {
         if (!esModoPersonalizado()) return;
 
-        // Quitar el botón verde del libro de recetas de forma segura
         List<GuiEventListener> aQuitar = new ArrayList<>();
         for (GuiEventListener child : this.children()) {
             if (child instanceof ImageButton) {
@@ -58,33 +58,50 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
         }
 
         this.leftPos = (this.width - this.imageWidth) / 2;
-        reordenarSlotsOcupados();
+        reordenarSlotsVisibles();
     }
 
     @Inject(method = "containerTick", at = @At("TAIL"))
     private void actualizarSlotsEnVivo(CallbackInfo ci) {
         if (esModoPersonalizado()) {
-            reordenarSlotsOcupados();
+            reordenarSlotsVisibles();
         }
     }
 
     @Unique
-    private void reordenarSlotsOcupados() {
-        List<Slot> ocupados = new ArrayList<>();
+    private void reordenarSlotsVisibles() {
+        if (this.minecraft == null || this.minecraft.player == null) return;
+
+        boolean esEscondido = ClientHudStorage.enPartidaActiva && "ESCONDIDO".equals(ClientHudStorage.rolLocal);
+        int slotVacioCamuflaje = -1;
+        if (esEscondido) {
+            for (int i = 0; i < 9; i++) {
+                if (this.minecraft.player.getInventory().getItem(i).isEmpty()) {
+                    slotVacioCamuflaje = i;
+                    break;
+                }
+            }
+        }
+
+        List<Slot> visibles = new ArrayList<>();
         for (Slot slot : this.menu.slots) {
-            if (slot.hasItem()) {
-                ocupados.add(slot);
+            boolean esSlotCamuflaje = slotVacioCamuflaje != -1
+                    && slot.container == this.minecraft.player.getInventory()
+                    && slot.getContainerSlot() == slotVacioCamuflaje;
+
+            if (slot.hasItem() || esSlotCamuflaje) {
+                visibles.add(slot);
             } else {
                 ((SlotPosition) slot).escondite$setPos(-9999, -9999);
             }
         }
 
-        if (!ocupados.isEmpty()) {
-            int totalW = ocupados.size() * 18;
+        if (!visibles.isEmpty()) {
+            int totalW = visibles.size() * 18;
             int startX = (this.imageWidth - totalW) / 2 + 1;
             int slotY = 92;
-            for (int i = 0; i < ocupados.size(); i++) {
-                Slot s = ocupados.get(i);
+            for (int i = 0; i < visibles.size(); i++) {
+                Slot s = visibles.get(i);
                 ((SlotPosition) s).escondite$setPos(startX + (i * 18), slotY);
             }
         }
@@ -107,7 +124,6 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
 
         int cx = this.leftPos + (this.imageWidth / 2);
 
-        // Recuadro del personaje centrado
         int boxW = 58;
         int boxH = 76;
         int boxX = cx - (boxW / 2);
@@ -116,7 +132,6 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
         graphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0xAA101520);
         graphics.renderOutline(boxX, boxY, boxW, boxH, 0xCC38BDF8);
 
-        // Renderizar jugador 3D siguiendo el cursor dentro del recuadro
         InventoryScreen.renderEntityInInventoryFollowsMouse(
                 graphics,
                 boxX + 4, boxY + 4,
@@ -126,9 +141,8 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
                 player
         );
 
-        // Dibujar casillas únicamente para los slots ocupados
         for (Slot slot : this.menu.slots) {
-            if (slot.hasItem() && slot.x > -1000) {
+            if (slot.x > -1000) {
                 int sx = this.leftPos + slot.x - 1;
                 int sy = this.topPos + slot.y - 1;
                 graphics.fill(sx, sy, sx + 18, sy + 18, 0xCC1E293B);

@@ -2,7 +2,6 @@ package com.yessenia.escondite.game;
 
 import com.yessenia.escondite.config.ArenaData;
 import com.yessenia.escondite.config.ConfigManager;
-import com.yessenia.escondite.item.ItemFactory;
 import com.yessenia.escondite.network.SkinNetworkManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -71,7 +70,6 @@ public class GameManager {
 
     public static void alEntrarServidor(ServerPlayer player, MinecraftServer server) {
         SkinNetworkManager.sincronizarTodoAJugador(player);
-        // Verificar si estaba desconectado dentro de su minuto de gracia en alguna sesión
         for (ArenaSession sesion : sesiones.values()) {
             if (sesion.desconectadosTicks.containsKey(player.getUUID())) {
                 jugadorArena.put(player.getUUID(), sesion.data.id);

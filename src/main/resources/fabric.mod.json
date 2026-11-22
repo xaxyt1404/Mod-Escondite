@@ -3,15 +3,15 @@
 	"id": "escondite",
 	"version": "${version}",
 	"name": "Escondite",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Minijuego multijugador de Escondite (Hide & Seek) por camuflaje de texturas con gestor de arenas, portales flotantes en el lobby, rotación automática de buscadores, kits personalizados y skins dinámicas sin servidores externos.",
 	"authors": [
-		"Me!"
+		"Yessenia91"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://modrinth.com/mod/escondite",
+		"sources": "https://github.com/xaxyt1404/Mod-Escondite"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/escondite/icon.png",
 	"environment": "*",
 	"entrypoints": {

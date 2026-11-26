@@ -22,86 +22,86 @@ import net.minecraft.world.level.block.Blocks;
 public class EsconditeCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("escondite")
-                .then(Commands.literal("fijarlobby")
+        dispatcher.register(Commands.literal("hideandseek")
+                .then(Commands.literal("setlobby")
                         .requires(src -> src.hasPermission(2))
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();
                             ConfigManager.get().lobbyGeneral = PosData.fromPlayer(player);
                             ConfigManager.save();
-                            ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Lobby General fijado en tu posición."), true);
+                            ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Main lobby set at your current position."), true);
                             return 1;
                         }))
-                .then(Commands.literal("creararena")
+                .then(Commands.literal("createarena")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("id", StringArgumentType.word())
-                                .then(Commands.argument("nombre", StringArgumentType.string())
-                                        .then(Commands.argument("bloque", StringArgumentType.string())
+                                .then(Commands.argument("name", StringArgumentType.string())
+                                        .then(Commands.argument("block", StringArgumentType.string())
                                                 .then(Commands.argument("skin", StringArgumentType.word())
-                                                        .then(Commands.argument("ancho", IntegerArgumentType.integer(20, 200))
-                                                                .then(Commands.argument("alto", IntegerArgumentType.integer(10, 100))
-                                                                        .then(Commands.argument("largo", IntegerArgumentType.integer(20, 200))
+                                                        .then(Commands.argument("width", IntegerArgumentType.integer(20, 200))
+                                                                .then(Commands.argument("height", IntegerArgumentType.integer(10, 100))
+                                                                        .then(Commands.argument("length", IntegerArgumentType.integer(20, 200))
                                                                                 .executes(ctx -> {
                                                                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                                                                                     String id = StringArgumentType.getString(ctx, "id").toLowerCase();
-                                                                                    String nombre = StringArgumentType.getString(ctx, "nombre").trim();
-                                                                                    String bloque = StringArgumentType.getString(ctx, "bloque").trim();
+                                                                                    String name = StringArgumentType.getString(ctx, "name").trim();
+                                                                                    String block = StringArgumentType.getString(ctx, "block").trim();
                                                                                     String skin = StringArgumentType.getString(ctx, "skin").trim();
-                                                                                    int ancho = IntegerArgumentType.getInteger(ctx, "ancho");
-                                                                                    int alto = IntegerArgumentType.getInteger(ctx, "alto");
-                                                                                    int largo = IntegerArgumentType.getInteger(ctx, "largo");
+                                                                                    int width = IntegerArgumentType.getInteger(ctx, "width");
+                                                                                    int height = IntegerArgumentType.getInteger(ctx, "height");
+                                                                                    int length = IntegerArgumentType.getInteger(ctx, "length");
 
                                                                                     if (ConfigManager.get().arenas.containsKey(id)) {
-                                                                                        ctx.getSource().sendFailure(Component.literal("§c[Escondite] Ya existe una arena con el ID '" + id + "'. Usa otro ID o elimínala primero con /escondite eliminararena " + id));
+                                                                                        ctx.getSource().sendFailure(Component.literal("§c[Escondite] An arena with ID '" + id + "' already exists. Use another ID or delete it first with /hideandseek deletearena " + id));
                                                                                         return 0;
                                                                                     }
 
-                                                                                    String bloqueNuevoId = normalizarBloqueId(bloque);
+                                                                                    String newBlockId = normalizeBlockId(block);
 
-                                                                                    for (ArenaData existente : ConfigManager.get().arenas.values()) {
-                                                                                        if (existente.nombreDisplay != null && existente.nombreDisplay.equalsIgnoreCase(nombre)) {
-                                                                                            ctx.getSource().sendFailure(Component.literal("§c[Escondite] Ya existe una arena llamada '" + existente.nombreDisplay + "' (ID: " + existente.id + ")."));
+                                                                                    for (ArenaData existing : ConfigManager.get().arenas.values()) {
+                                                                                        if (existing.nombreDisplay != null && existing.nombreDisplay.equalsIgnoreCase(name)) {
+                                                                                            ctx.getSource().sendFailure(Component.literal("§c[Escondite] An arena named '" + existing.nombreDisplay + "' (ID: " + existing.id + ") already exists."));
                                                                                             return 0;
                                                                                         }
-                                                                                        if (existente.bloqueBase != null && normalizarBloqueId(existente.bloqueBase).equals(bloqueNuevoId)) {
-                                                                                            ctx.getSource().sendFailure(Component.literal("§c[Escondite] Ya existe una arena con el bloque '" + bloque + "' (Arena: " + existente.nombreDisplay + ", ID: " + existente.id + ")."));
+                                                                                        if (existing.bloqueBase != null && normalizeBlockId(existing.bloqueBase).equals(newBlockId)) {
+                                                                                            ctx.getSource().sendFailure(Component.literal("§c[Escondite] An arena using block '" + block + "' already exists (Arena: " + existing.nombreDisplay + ", ID: " + existing.id + ")."));
                                                                                             return 0;
                                                                                         }
                                                                                     }
 
-                                                                                    ArenaData arena = ArenaBuilder.crearArena(player.serverLevel(), id, nombre, bloque, skin, ancho, alto, largo);
+                                                                                    ArenaData arena = ArenaBuilder.crearArena(player.serverLevel(), id, name, block, skin, width, height, length);
                                                                                     arena.spawnArena.teleport(player, player.getServer());
-                                                                                    ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Arena '" + nombre + "' generada. Usa /escondite habilitar " + id + " true cuando termines de decorarla."), true);
+                                                                                    ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Arena '" + name + "' generated. Use /hideandseek enable " + id + " true once you finish decorating it."), true);
                                                                                     return 1;
                                                                                 })))))))))
-                .then(Commands.literal("fijarspawn")
+                .then(Commands.literal("setspawn")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("id", StringArgumentType.word())
-                                .then(Commands.argument("tipo", StringArgumentType.word())
+                                .then(Commands.argument("type", StringArgumentType.word())
                                         .executes(ctx -> {
                                             ServerPlayer player = ctx.getSource().getPlayerOrException();
                                             String id = StringArgumentType.getString(ctx, "id").toLowerCase();
-                                            String tipo = StringArgumentType.getString(ctx, "tipo").toLowerCase();
+                                            String type = StringArgumentType.getString(ctx, "type").toLowerCase();
                                             ArenaData arena = ConfigManager.get().arenas.get(id);
                                             if (arena == null) {
-                                                ctx.getSource().sendFailure(Component.literal("§cArena no encontrada."));
+                                                ctx.getSource().sendFailure(Component.literal("§cArena not found."));
                                                 return 0;
                                             }
                                             PosData pos = PosData.fromPlayer(player);
-                                            switch (tipo) {
+                                            switch (type) {
                                                 case "arena" -> arena.spawnArena = pos;
                                                 case "sublobby" -> arena.spawnSubLobby = pos;
-                                                case "buscador" -> arena.spawnEsperaBuscador = pos;
+                                                case "seeker" -> arena.spawnEsperaBuscador = pos;
                                                 default -> {
-                                                    ctx.getSource().sendFailure(Component.literal("§cTipo inválido. Usa: arena, sublobby o buscador."));
+                                                    ctx.getSource().sendFailure(Component.literal("§cInvalid type. Use: arena, sublobby, or seeker."));
                                                     return 0;
                                                 }
                                             }
                                             ConfigManager.save();
-                                            ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Spawn '" + tipo + "' actualizado para " + arena.nombreDisplay), true);
+                                            ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Spawn '" + type + "' updated for " + arena.nombreDisplay), true);
                                             return 1;
                                         }))))
-                .then(Commands.literal("fijarportal")
+                .then(Commands.literal("setportal")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(ctx -> {
@@ -109,7 +109,7 @@ public class EsconditeCommands {
                                     String id = StringArgumentType.getString(ctx, "id").toLowerCase();
                                     ArenaData arena = ConfigManager.get().arenas.get(id);
                                     if (arena == null) {
-                                        ctx.getSource().sendFailure(Component.literal("§cNo existe la arena '" + id + "'."));
+                                        ctx.getSource().sendFailure(Component.literal("§cArena '" + id + "' does not exist."));
                                         return 0;
                                     }
                                     PosData pos = PosData.fromPlayer(player);
@@ -117,45 +117,45 @@ public class EsconditeCommands {
                                     arena.posPortalLobby = pos;
                                     ConfigManager.save();
                                     PortalManager.sincronizarPortales(player.getServer());
-                                    ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Portal flotante de §e" + arena.nombreDisplay + " §afijado en tu posición."), true);
+                                    ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Floating portal for §e" + arena.nombreDisplay + " §aset at your position."), true);
                                     return 1;
                                 })))
-                .then(Commands.literal("quitarportal")
+                .then(Commands.literal("removeportal")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(ctx -> {
                                     String id = StringArgumentType.getString(ctx, "id").toLowerCase();
                                     ArenaData arena = ConfigManager.get().arenas.get(id);
                                     if (arena == null) {
-                                        ctx.getSource().sendFailure(Component.literal("§cNo existe la arena '" + id + "'."));
+                                        ctx.getSource().sendFailure(Component.literal("§cArena '" + id + "' does not exist."));
                                         return 0;
                                     }
                                     arena.posPortalLobby = null;
                                     ConfigManager.save();
                                     PortalManager.eliminarPortal(id, ctx.getSource().getServer());
-                                    ctx.getSource().sendSuccess(() -> Component.literal("§e[Escondite] Portal flotante de §f" + arena.nombreDisplay + " §eeliminado."), true);
+                                    ctx.getSource().sendSuccess(() -> Component.literal("§e[Escondite] Floating portal for §f" + arena.nombreDisplay + " §eremoved."), true);
                                     return 1;
                                 })))
-                .then(Commands.literal("habilitar")
+                .then(Commands.literal("enable")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("id", StringArgumentType.word())
-                                .then(Commands.argument("estado", BoolArgumentType.bool())
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
                                         .executes(ctx -> {
                                             String id = StringArgumentType.getString(ctx, "id").toLowerCase();
-                                            boolean estado = BoolArgumentType.getBool(ctx, "estado");
+                                            boolean enabled = BoolArgumentType.getBool(ctx, "enabled");
                                             ArenaData arena = ConfigManager.get().arenas.get(id);
                                             if (arena == null) {
-                                                ctx.getSource().sendFailure(Component.literal("§cArena no encontrada."));
+                                                ctx.getSource().sendFailure(Component.literal("§cArena not found."));
                                                 return 0;
                                             }
-                                            arena.habilitada = estado;
+                                            arena.habilitada = enabled;
                                             ConfigManager.save();
                                             PortalManager.sincronizarPortales(ctx.getSource().getServer());
 
-                                            ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Arena '" + arena.nombreDisplay + "' habilitada: " + estado), true);
+                                            ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Arena '" + arena.nombreDisplay + "' enabled: " + enabled), true);
                                             return 1;
                                         }))))
-                .then(Commands.literal("entrar")
+                .then(Commands.literal("join")
                         .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
@@ -163,31 +163,31 @@ public class EsconditeCommands {
                                     GameManager.entrarArena(player, id, player.getServer());
                                     return 1;
                                 })))
-                .then(Commands.literal("eliminararena")
+                .then(Commands.literal("deletearena")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(ctx -> {
                                     String id = StringArgumentType.getString(ctx, "id").toLowerCase();
                                     ArenaData arena = ConfigManager.get().arenas.get(id);
                                     if (arena == null) {
-                                        ctx.getSource().sendFailure(Component.literal("§cArena no encontrada."));
+                                        ctx.getSource().sendFailure(Component.literal("§cArena not found."));
                                         return 0;
                                     }
 
-                                    // 1. Sacar jugadores y cerrar sesión activa si existe
+                                    // 1. Remove players and close active session if present
                                     GameManager.eliminarSesion(id, ctx.getSource().getServer());
 
-                                    // 2. Eliminar entidad del portal flotante si tenía
+                                    // 2. Remove floating portal entity if present
                                     PortalManager.eliminarPortal(id, ctx.getSource().getServer());
 
-                                    // 3. Limpiar bloques de la estructura en el mundo
+                                    // 3. Clear structure blocks in the world
                                     ArenaBuilder.eliminarEstructuraArena(ctx.getSource().getLevel(), arena);
 
-                                    // 4. Borrar del JSON y guardar
+                                    // 4. Remove from JSON and save
                                     ConfigManager.get().arenas.remove(id);
                                     ConfigManager.save();
 
-                                    ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Arena '" + arena.nombreDisplay + "' eliminada por completo."), true);
+                                    ctx.getSource().sendSuccess(() -> Component.literal("§a[Escondite] Arena '" + arena.nombreDisplay + "' completely deleted."), true);
                                     return 1;
                                 })))
         );
@@ -200,12 +200,12 @@ public class EsconditeCommands {
                 }));
     }
 
-    private static String normalizarBloqueId(String bloqueRaw) {
-        ResourceLocation rl = ResourceLocation.tryParse(bloqueRaw.toLowerCase());
-        Block bloque = (rl != null) ? BuiltInRegistries.BLOCK.get(rl) : Blocks.AIR;
-        if (bloque == Blocks.AIR) {
-            bloque = Blocks.STONE;
+    private static String normalizeBlockId(String blockRaw) {
+        ResourceLocation rl = ResourceLocation.tryParse(blockRaw.toLowerCase());
+        Block block = (rl != null) ? BuiltInRegistries.BLOCK.get(rl) : Blocks.AIR;
+        if (block == Blocks.AIR) {
+            block = Blocks.STONE;
         }
-        return BuiltInRegistries.BLOCK.getKey(bloque).toString();
+        return BuiltInRegistries.BLOCK.getKey(block).toString();
     }
 }

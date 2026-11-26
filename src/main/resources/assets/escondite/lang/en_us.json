@@ -1,0 +1,12 @@
+{
+  "item.escondite.gestor_arenas": "Arena Manager",
+  "item.escondite.orbe_preparacion": "Ready Orb",
+  "item.escondite.baculo_anfitrion": "Start game",
+  "item.escondite.martillo_juez": "End game",
+  "item.escondite.puerta_hogar": "Back to Start",
+  "item.escondite.castigo": "Punishment",
+  "item.escondite.palitroque": "Club",
+  "hud.escondite.phase.hiding": "Hiding",
+  "hud.escondite.phase.seeking": "Seeking",
+  "message.escondite.arena_unavailable": "This arena is not available."
+}

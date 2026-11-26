@@ -71,15 +71,15 @@ public class PortalManager {
 
     private static String construirTextoEstado(ArenaData arena) {
         if (!arena.habilitada) {
-            return "§cDeshabilitada";
+            return "§cDisabled";
         }
         ArenaSession sesion = GameManager.getSesion(arena.id);
         int cantJugadores = (sesion != null) ? sesion.jugadores.size() : 0;
         boolean enCurso = (sesion != null && (sesion.estado == GameState.ESCONDIENDOSE || sesion.estado == GameState.BUSCANDO));
 
         if (enCurso) {
-            return "§eEn partida §7(" + cantJugadores + " jug.)";
+            return "§eIn game §7(" + cantJugadores + " players.)";
         }
-        return "§aDisponible §7(" + cantJugadores + " jug.)";
+        return "§aAvailable §7(" + cantJugadores + " players.)";
     }
 }

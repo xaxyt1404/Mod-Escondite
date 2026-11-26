@@ -32,7 +32,7 @@ public class GameManager {
     public static void entrarArena(ServerPlayer player, String arenaId, MinecraftServer server) {
         ArenaData data = ConfigManager.get().arenas.get(arenaId.toLowerCase());
         if (data == null || !data.habilitada) {
-            player.displayClientMessage(Component.literal("§cEsta arena no está disponible."), true);
+            player.displayClientMessage(Component.literal("§cThis arena is not available."), true);
             return;
         }
         salirArenaActual(player, server, false);

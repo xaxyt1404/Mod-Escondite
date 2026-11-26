@@ -87,7 +87,7 @@ public class Escondite implements ModInitializer {
 			}
 		});
 
-		LOGGER.info("Mod Escondite inicializado correctamente.");
+		LOGGER.info("HideandSeek mod initialized successfully.");
 	}
 
 	public static void activarLatigo(ServerPlayer player) {

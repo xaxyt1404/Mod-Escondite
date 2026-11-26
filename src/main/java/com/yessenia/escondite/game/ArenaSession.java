@@ -105,9 +105,9 @@ public class ArenaSession {
 
         // Si estaba en cuenta regresiva (10s o 5s), se cancela por entrada nueva
         if (estado == GameState.CUENTA_REGRESIVA_INICIO) {
-            cancelarCuentaRegresiva(server, "§eCuenta cancelada: entró un jugador.");
+            cancelarCuentaRegresiva(server, "§eCountdown canceled: a player joined.");
         } else if (estado == GameState.CUENTA_REGRESIVA_SORTEO) {
-            cancelarCuentaSiguienteRonda(server, "§eCuenta cancelada: entró un jugador.");
+            cancelarCuentaSiguienteRonda(server, "§eCountdown canceled: a player joined.");
         }
 
         jugadores.add(uuid);
@@ -163,16 +163,16 @@ public class ArenaSession {
                 if (nuevoAnfitrion != null && (estado == GameState.SUBLOBBY_ESPERA || estado == GameState.ENTRE_RONDAS)) {
                     listos.remove(anfitrion);
                     asignarItemsSubLobby(nuevoAnfitrion);
-                    nuevoAnfitrion.displayClientMessage(Component.literal("§6¡Ahora eres el anfitrión de la sala!"), true);
+                    nuevoAnfitrion.displayClientMessage(Component.literal("§6You are now the room host!"), true);
                 }
             }
         }
 
         // Cancelaciones o chequeos de victoria según estado
         if (estado == GameState.CUENTA_REGRESIVA_INICIO) {
-            cancelarCuentaRegresiva(server, "§eCuenta cancelada: salió un jugador.");
+            cancelarCuentaRegresiva(server, "§eCountdown canceled: a player left.");
         } else if (estado == GameState.CUENTA_REGRESIVA_SORTEO) {
-            cancelarCuentaSiguienteRonda(server, "§eCuenta cancelada: salió un jugador.");
+            cancelarCuentaSiguienteRonda(server, "§eCountdown canceled: a player left.");
         } else if (enRondaActiva()) {
             verificarCondicionesFinRonda(server);
         }
@@ -226,12 +226,12 @@ public class ArenaSession {
 
         if (estado == GameState.SUBLOBBY_ESPERA) {
             if (jugadores.size() < 2) {
-                player.displayClientMessage(Component.literal("§cSe necesitan al menos 2 jugadores para iniciar."), true);
+                player.displayClientMessage(Component.literal("§cAt least 2 players are required to start."), true);
                 return;
             }
             for (UUID id : jugadores) {
                 if (!id.equals(anfitrion) && !listos.contains(id)) {
-                    player.displayClientMessage(Component.literal("§cFaltan jugadores por marcar Listo."), true);
+                    player.displayClientMessage(Component.literal("§cSome players are not marked Ready yet."), true);
                     return;
                 }
             }
@@ -239,17 +239,17 @@ public class ArenaSession {
             ticksRestantes = 200; // 10 segundos
             asignarItemsSubLobby(player);
         } else if (estado == GameState.CUENTA_REGRESIVA_INICIO) {
-            cancelarCuentaRegresiva(server, "§cInicio cancelado por el anfitrión.");
+            cancelarCuentaRegresiva(server, "§cStart canceled by the host.");
         } else if (estado == GameState.ENTRE_RONDAS) {
             if (jugadores.size() < 2) {
-                player.displayClientMessage(Component.literal("§cSe necesitan al menos 2 jugadores para la siguiente ronda."), true);
+                player.displayClientMessage(Component.literal("§cAt least 2 players are required for the next round."), true);
                 return;
             }
             estado = GameState.CUENTA_REGRESIVA_SORTEO;
             ticksRestantes = 100; // 5 segundos
             asignarItemsSubLobby(player);
         } else if (estado == GameState.CUENTA_REGRESIVA_SORTEO) {
-            cancelarCuentaSiguienteRonda(server, "§cCuenta cancelada por el anfitrión.");
+            cancelarCuentaSiguienteRonda(server, "§cCountdown canceled by the host.");
         }
     }
 
@@ -268,7 +268,7 @@ public class ArenaSession {
                 roles.put(id, PlayerRole.NINGUNO);
                 actualizarEquipoVisual(p, PlayerRole.NINGUNO, server);
                 asignarItemsSubLobby(p);
-                enviarTitle(p, "§cPARTIDA TERMINADA", "§7De vuelta en espera", 5, 40, 10);
+                enviarTitle(p, "§cGAME ENDED", "§7Back to waiting room", 5, 40, 10);
             }
         }
     }
@@ -337,7 +337,7 @@ public class ArenaSession {
 
                 if (rest % 20 == 0 && rest > 0) {
                     int seg = rest / 20;
-                    enviarTitle(infPlayer, "§c§l¡TE ENCONTRARON!", "§eVolviendo en §f" + seg + "s...", 0, 22, 0);
+                    enviarTitle(infPlayer, "§c§lYOU WERE FOUND!", "§eReturning in §f" + seg + "s...", 0, 22, 0);
                     infPlayer.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.MASTER, 1.0f, 1.2f);
                 }
 
@@ -345,7 +345,7 @@ public class ArenaSession {
                 if (rest <= 0) {
                     itInf.remove();
                     data.spawnArena.teleport(infPlayer, server);
-                    enviarTitle(infPlayer, "§c§l¡A BUSCAR!", "", 0, 25, 5);
+                    enviarTitle(infPlayer, "§c§lSEEK!", "", 0, 25, 5);
                     infPlayer.playNotifySound(SoundEvents.ENDER_DRAGON_GROWL, SoundSource.MASTER, 0.7f, 1.2f);
                 } else {
                     entry.setValue(rest);
@@ -374,7 +374,7 @@ public class ArenaSession {
             for (UUID id : jugadores) {
                 ServerPlayer p = server.getPlayerList().getPlayer(id);
                 if (p != null) {
-                    enviarTitle(p, "§6§l" + seg, "§ePreparándose para iniciar...", 0, 22, 0);
+                    enviarTitle(p, "§6§l" + seg, "§eGetting ready to start...", 0, 22, 0);
                     p.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.MASTER, 1.0f, 1.0f);
                 }
             }
@@ -391,7 +391,7 @@ public class ArenaSession {
             for (UUID id : jugadores) {
                 ServerPlayer p = server.getPlayerList().getPlayer(id);
                 if (p != null) {
-                    enviarTitle(p, "§6§l" + seg, "§eSiguiente ronda...", 0, 22, 0);
+                    enviarTitle(p, "§6§l" + seg, "§eNext round...", 0, 22, 0);
                     p.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.MASTER, 1.0f, 1.0f);
                 }
             }
@@ -461,7 +461,7 @@ public class ArenaSession {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) {
                 p.getInventory().clearContent();
-                p.displayClientMessage(Component.literal("§bSorteo iniciado"), true);
+                p.displayClientMessage(Component.literal("§bDraw started"), true);
             }
         }
     }
@@ -480,10 +480,10 @@ public class ArenaSession {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) {
                 if (esFinal) {
-                    enviarTitle(p, "§c§lEl buscador es", "§e§l" + nombreActual, 0, 40, 10);
+                    enviarTitle(p, "§c§lThe seeker is", "§e§l" + nombreActual, 0, 40, 10);
                     p.playNotifySound(ModSounds.RULETA_GANADOR, SoundSource.MASTER, 1.0f, 1.0f);
                 } else {
-                    enviarTitle(p, "§c§lEl buscador es", "§f" + nombreActual, 0, 15, 0);
+                    enviarTitle(p, "§c§lThe seeker is", "§f" + nombreActual, 0, 15, 0);
                     p.playNotifySound(ModSounds.RULETA_TICK, SoundSource.MASTER, 0.7f, 1.4f);
                 }
             }
@@ -539,7 +539,7 @@ public class ArenaSession {
                 for (UUID id : jugadores) {
                     ServerPlayer p = server.getPlayerList().getPlayer(id);
                     if (p == null) continue;
-                    enviarTitle(p, "", "§e" + seg + " segundos para esconderse", 0, 22, 5);
+                    enviarTitle(p, "", "§e" + seg + " seconds to hide", 0, 22, 5);
                     p.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.MASTER, 1.0f, 1.2f);
                 }
             }
@@ -565,7 +565,7 @@ public class ArenaSession {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p == null) continue;
 
-            enviarTitle(p, "§c§l¡A BUSCAR!", "", 5, 30, 10);
+            enviarTitle(p, "§c§lSEEK!", "", 5, 30, 10);
             p.playNotifySound(SoundEvents.ENDER_DRAGON_GROWL, SoundSource.MASTER, 0.8f, 1.0f);
 
             if (roles.get(id) == PlayerRole.BUSCADOR) {
@@ -622,13 +622,13 @@ public class ArenaSession {
         infectadosEsperaTicks.put(uuid, 100);
 
         String nombreVictima = victima.getName().getString();
-        String nombreAtacante = atacante != null ? atacante.getName().getString() : "un Buscador";
+        String nombreAtacante = atacante != null ? atacante.getName().getString() : "a Seeker";
 
         for (UUID id : jugadores) {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) {
                 p.playNotifySound(ModSounds.ATRAPADO, SoundSource.MASTER, 0.9f, 1.0f);
-                p.displayClientMessage(Component.literal("§c" + nombreVictima + " §ffue atrapado por §c" + nombreAtacante + "§f."), true);
+                p.displayClientMessage(Component.literal("§c" + nombreVictima + " §fwas caught by §c" + nombreAtacante + "§f."), true);
             }
         }
 
@@ -658,7 +658,7 @@ public class ArenaSession {
             else if (r == PlayerRole.ESCONDIDO) listaEscondidos.add(p.getName().getString());
         }
 
-        String faseTexto = (estado == GameState.ESCONDIENDOSE) ? "Escondiéndose" : "Buscando";
+        String faseTexto = (estado == GameState.ESCONDIENDOSE) ? "Hiding" : "Seeking";
         int segs = Math.max(0, ticksRestantes / 20);
         String nombre = data.nombreDisplay != null ? data.nombreDisplay : data.id;
 
@@ -680,7 +680,7 @@ public class ArenaSession {
 
         if (estado == GameState.SORTEO) {
             data.spawnSubLobby.teleport(player, server);
-            player.displayClientMessage(Component.literal("§eEsperando a que finalice el sorteo..."), true);
+            player.displayClientMessage(Component.literal("§eWaiting for the draw to finish..."), true);
             return;
         }
 
@@ -704,7 +704,7 @@ public class ArenaSession {
 
         ServerPlayer objetivo = buscadores.get(siguiente);
         espectador.setCamera(objetivo);
-        espectador.displayClientMessage(Component.literal("§bViendo a: §f" + objetivo.getName().getString() + " §7| Usa clic izquierdo para alternar entre buscadores"), true);
+        espectador.displayClientMessage(Component.literal("§bWhatching: §f" + objetivo.getName().getString() + " §7| Use left/right click to switch seekers"), true);
     }
 
     private void actualizarEspectadores(MinecraftServer server) {
@@ -731,7 +731,7 @@ public class ArenaSession {
             }
 
             if (server.getTickCount() % 20 == 0 && esp.getCamera() instanceof ServerPlayer obj) {
-                esp.displayClientMessage(Component.literal("§bViendo a: §f" + obj.getName().getString() + " §7| Usa clic izquierdo para alternar entre buscadores"), true);
+                esp.displayClientMessage(Component.literal("§bWatching: §f" + obj.getName().getString() + " §7| Use left/right click to switch seekers"), true);
             }
         }
     }
@@ -777,7 +777,7 @@ public class ArenaSession {
         indiceCamaraBuscador.clear();
         infectadosEsperaTicks.clear();
 
-        String tituloGanador = gananBuscadores ? "§c§l¡GANAN LOS BUSCADORES!" : "§a§l¡GANAN LOS ESCONDIDOS!";
+        String tituloGanador = gananBuscadores ? "§c§lSEEKERS WIN!" : "§a§lHIDERS WIN!";
 
         // Verificar si ya TODOS los presentes fueron buscadores
         boolean todosYaBuscaron = !jugadores.isEmpty();
@@ -806,7 +806,7 @@ public class ArenaSession {
                     ConfigManager.get().lobbyGeneral.teleport(p, server);
                 }
                 actualizarEquipoVisual(p, PlayerRole.NINGUNO, server);
-                enviarTitle(p, "§6§lPARTIDA TERMINADA", tituloGanador, 5, 60, 15);
+                enviarTitle(p, "§6§lGAME OVER", tituloGanador, 5, 60, 15);
             }
         } else {
             estado = GameState.ENTRE_RONDAS;
@@ -823,7 +823,7 @@ public class ArenaSession {
                 data.spawnSubLobby.teleport(p, server);
                 actualizarEquipoVisual(p, PlayerRole.NINGUNO, server);
                 asignarItemsSubLobby(p);
-                enviarTitle(p, tituloGanador, "§eEsperando siguiente ronda...", 5, 50, 10);
+                enviarTitle(p, tituloGanador, "§eWaiting for next round...", 5, 50, 10);
             }
         }
     }

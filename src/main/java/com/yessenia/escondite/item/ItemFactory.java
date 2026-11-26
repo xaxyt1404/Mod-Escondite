@@ -30,22 +30,22 @@ public class ItemFactory {
         ItemStack stack = new ItemStack(ModItems.BACULO_ANFITRION);
         stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(contando ? 1 : 0));
         if (contando) {
-            stack.set(DataComponents.ITEM_NAME, Component.literal("§c§lCancelar Inicio"));
+            stack.set(DataComponents.ITEM_NAME, Component.literal("§c§lCancelar inicio"));
         } else {
-            stack.set(DataComponents.ITEM_NAME, Component.literal(esEntreRondas ? "§e§lSiguiente Ronda" : "§e§lIniciar Partida"));
+            stack.set(DataComponents.ITEM_NAME, Component.literal(esEntreRondas ? "§e§lIniciar ronda" : "§e§lIniciar partida"));
         }
         return stack;
     }
 
     public static ItemStack crearPalaTerminar() {
         ItemStack stack = new ItemStack(ModItems.MARTILLO_JUEZ);
-        stack.set(DataComponents.ITEM_NAME, Component.literal("§4§lTerminar Partida"));
+        stack.set(DataComponents.ITEM_NAME, Component.literal("§4§lTerminar partida"));
         return stack;
     }
 
     public static ItemStack crearPuertaSalir() {
         ItemStack stack = new ItemStack(ModItems.PUERTA_HOGAR);
-        stack.set(DataComponents.ITEM_NAME, Component.literal("§c§lVolver al Lobby"));
+        stack.set(DataComponents.ITEM_NAME, Component.literal("§c§lVolver a Inicio"));
         return stack;
     }
 

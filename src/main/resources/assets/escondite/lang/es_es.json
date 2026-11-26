@@ -1,0 +1,12 @@
+{
+  "item.escondite.gestor_arenas": "Gestor de Arenas",
+  "item.escondite.orbe_preparacion": "Orbe de Preparación",
+  "item.escondite.baculo_anfitrion": "Iniciar partida",
+  "item.escondite.martillo_juez": "Terminar partida",
+  "item.escondite.puerta_hogar": "Volver a Inicio",
+  "item.escondite.castigo": "Castigo",
+  "item.escondite.palitroque": "Palitroque",
+  "hud.escondite.phase.hiding": "Escondiéndose",
+  "hud.escondite.phase.seeking": "Buscando",
+  "message.escondite.arena_unavailable": "Esta arena no está disponible."
+}

@@ -33,7 +33,7 @@ public class AdminNetworkManager {
 
             server.execute(() -> {
                 if (!player.hasPermissions(2)) {
-                    player.sendSystemMessage(Component.literal("§c[Escondite] No tienes permisos de administrador."));
+                    player.sendSystemMessage(Component.literal("§c[Escondite] You do not have administrator permissions."));
                     return;
                 }
                 procesarAccion(player, server, payload);
@@ -62,28 +62,28 @@ public class AdminNetworkManager {
         String id = p.id().toLowerCase().trim();
 
         switch (p.accion()) {
-            case "CREAR" -> {
+            case "CREATE" -> {
                 String nombre = p.nombre().trim();
                 String bloque = p.bloque().trim();
                 String skin = p.skin().trim();
 
                 if (id.isEmpty() || nombre.isEmpty() || bloque.isEmpty() || skin.isEmpty()) {
-                    player.sendSystemMessage(Component.literal("§c[Escondite] Completa todos los campos para crear la arena."));
+                    player.sendSystemMessage(Component.literal("§c[Escondite] Fill in all fields to create the arena."));
                     return;
                 }
                 if (ConfigManager.get().arenas.containsKey(id)) {
-                    player.sendSystemMessage(Component.literal("§c[Escondite] Ya existe una arena con el ID '" + id + "'."));
+                    player.sendSystemMessage(Component.literal("§c[Escondite] An arena with ID '" + id + "' already exists."));
                     return;
                 }
 
                 String bloqueNorm = normalizarBloqueId(bloque);
                 for (ArenaData existente : ConfigManager.get().arenas.values()) {
                     if (existente.nombreDisplay != null && existente.nombreDisplay.equalsIgnoreCase(nombre)) {
-                        player.sendSystemMessage(Component.literal("§c[Escondite] Ya existe una arena llamada '" + nombre + "'."));
+                        player.sendSystemMessage(Component.literal("§c[Escondite] An arena named '" + nombre + "' already exists."));
                         return;
                     }
                     if (existente.bloqueBase != null && normalizarBloqueId(existente.bloqueBase).equals(bloqueNorm)) {
-                        player.sendSystemMessage(Component.literal("§c[Escondite] Ya existe una arena con ese bloque base."));
+                        player.sendSystemMessage(Component.literal("§c[Escondite] An arena with that base block already exists."));
                         return;
                     }
                 }
@@ -94,7 +94,7 @@ public class AdminNetworkManager {
 
                 ArenaData nueva = ArenaBuilder.crearArena(player.serverLevel(), id, nombre, bloque, skin, ancho, alto, largo);
                 nueva.spawnArena.teleport(player, server);
-                player.sendSystemMessage(Component.literal("§a[Escondite] Arena '" + nombre + "' creada y teletransportado a su interior."));
+                player.sendSystemMessage(Component.literal("§a[Escondite] Arena '\" + nombre + \"' created and teleported inside."));
             }
 
             case "EDITAR" -> {
@@ -110,7 +110,7 @@ public class AdminNetworkManager {
 
                 ConfigManager.save();
                 PortalManager.sincronizarPortales(server);
-                player.sendSystemMessage(Component.literal("§a[Escondite] Cambios guardados para '" + arena.nombreDisplay + "'."));
+                player.sendSystemMessage(Component.literal("§a[Escondite] Changes saved for '" + arena.nombreDisplay + "'."));
                 abrirVentana(player);
             }
 
@@ -120,7 +120,7 @@ public class AdminNetworkManager {
                 arena.habilitada = !arena.habilitada;
                 ConfigManager.save();
                 PortalManager.sincronizarPortales(server);
-                player.sendSystemMessage(Component.literal("§a[Escondite] Arena '" + arena.nombreDisplay + "' -> " + (arena.habilitada ? "§aHabilitada" : "§cDeshabilitada")));
+                player.sendSystemMessage(Component.literal("§a[Escondite] Arena '" + arena.nombreDisplay + "' -> " + (arena.habilitada ? "§aEnabled" : "§cDisabled")));
                 abrirVentana(player);
             }
 
@@ -128,14 +128,14 @@ public class AdminNetworkManager {
                 ArenaData arena = ConfigManager.get().arenas.get(id);
                 if (arena != null && arena.spawnArena != null) {
                     arena.spawnArena.teleport(player, server);
-                    player.sendSystemMessage(Component.literal("§a[Escondite] Teletransportado a '" + arena.nombreDisplay + "'."));
+                    player.sendSystemMessage(Component.literal("§a[Escondite] Teleported to '" + arena.nombreDisplay + "'."));
                 }
             }
 
             case "FIJAR_LOBBY_GENERAL" -> {
                 ConfigManager.get().lobbyGeneral = PosData.fromPlayer(player);
                 ConfigManager.save();
-                player.sendSystemMessage(Component.literal("§a[Escondite] Lobby General fijado en tu posición."));
+                player.sendSystemMessage(Component.literal("§a[Escondite] Main Lobby set at your position."));
                 abrirVentana(player);
             }
 
@@ -159,14 +159,14 @@ public class AdminNetworkManager {
                     }
                 }
                 ConfigManager.save();
-                player.sendSystemMessage(Component.literal("§a[Escondite] Punto actualizado para '" + arena.nombreDisplay + "'."));
+                player.sendSystemMessage(Component.literal("§a[Escondite] Point updated for '" + arena.nombreDisplay + "'."));
                 abrirVentana(player);
             }
 
             case "ELIMINAR" -> {
                 ArenaData arena = ConfigManager.get().arenas.get(id);
                 if (arena == null) {
-                    player.sendSystemMessage(Component.literal("§c[Escondite] No se encontró la arena '" + id + "'."));
+                    player.sendSystemMessage(Component.literal("§c[Escondite] Arena '" + id + "' was not found."));
                     return;
                 }
                 GameManager.eliminarSesion(id, server);
@@ -185,7 +185,7 @@ public class AdminNetworkManager {
                 ArenaBuilder.eliminarEstructuraArena(nivelArena, arena);
                 ConfigManager.get().arenas.remove(id);
                 ConfigManager.save();
-                player.sendSystemMessage(Component.literal("§e[Escondite] Arena '" + arena.nombreDisplay + "' eliminada por completo."));
+                player.sendSystemMessage(Component.literal("§e[Escondite] Arena '" + arena.nombreDisplay + "' completely deleted."));
                 abrirVentana(player);
             }
         }

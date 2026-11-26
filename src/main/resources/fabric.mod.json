@@ -8,8 +8,10 @@
 		"Yessenia91"
 	],
 	"contact": {
-		"homepage": "https://modrinth.com/mod/mod-escondite",
-		"sources": "https://github.com/xaxyt1404/Mod-Escondite"
+		"homepage": "https://modrinth.com/mod/escondite-game",
+		"curseforge": "https://www.curseforge.com/minecraft/mc-mods/escondite",
+		"sources": "https://github.com/xaxyt1404/Mod-Escondite",
+		"issues": "https://github.com/xaxyt1404/Mod-Escondite/issues"
 	},
 	"license": "MIT",
 	"icon": "assets/escondite/icon.png",

@@ -3,8 +3,10 @@ package com.yessenia.escondite.game;
 import com.yessenia.escondite.config.ArenaData;
 import com.yessenia.escondite.config.ConfigManager;
 import com.yessenia.escondite.item.ItemFactory;
+import com.yessenia.escondite.network.HudSyncPayload;
 import com.yessenia.escondite.network.SkinNetworkManager;
 import com.yessenia.escondite.sound.ModSounds;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
@@ -19,8 +21,6 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
-import com.yessenia.escondite.network.HudSyncPayload;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 import java.util.*;
 
@@ -105,9 +105,9 @@ public class ArenaSession {
 
         // Si estaba en cuenta regresiva (10s o 5s), se cancela por entrada nueva
         if (estado == GameState.CUENTA_REGRESIVA_INICIO) {
-            cancelarCuentaRegresiva(server, "§eCountdown canceled: a player joined.");
+            cancelarCuentaRegresiva(server, "message.escondite.countdown_cancelled_join", ChatFormatting.YELLOW);
         } else if (estado == GameState.CUENTA_REGRESIVA_SORTEO) {
-            cancelarCuentaSiguienteRonda(server, "§eCountdown canceled: a player joined.");
+            cancelarCuentaSiguienteRonda(server, "message.escondite.countdown_cancelled_join", ChatFormatting.YELLOW);
         }
 
         jugadores.add(uuid);
@@ -163,16 +163,19 @@ public class ArenaSession {
                 if (nuevoAnfitrion != null && (estado == GameState.SUBLOBBY_ESPERA || estado == GameState.ENTRE_RONDAS)) {
                     listos.remove(anfitrion);
                     asignarItemsSubLobby(nuevoAnfitrion);
-                    nuevoAnfitrion.displayClientMessage(Component.literal("§6You are now the room host!"), true);
+                    nuevoAnfitrion.displayClientMessage(
+                            Component.translatable("message.escondite.new_host").withStyle(ChatFormatting.GOLD),
+                            true
+                    );
                 }
             }
         }
 
         // Cancelaciones o chequeos de victoria según estado
         if (estado == GameState.CUENTA_REGRESIVA_INICIO) {
-            cancelarCuentaRegresiva(server, "§eCountdown canceled: a player left.");
+            cancelarCuentaRegresiva(server, "message.escondite.countdown_cancelled_leave", ChatFormatting.YELLOW);
         } else if (estado == GameState.CUENTA_REGRESIVA_SORTEO) {
-            cancelarCuentaSiguienteRonda(server, "§eCountdown canceled: a player left.");
+            cancelarCuentaSiguienteRonda(server, "message.escondite.countdown_cancelled_leave", ChatFormatting.YELLOW);
         } else if (enRondaActiva()) {
             verificarCondicionesFinRonda(server);
         }
@@ -212,13 +215,12 @@ public class ArenaSession {
         if (listos.contains(uuid)) {
             listos.remove(uuid);
             player.getInventory().setItem(0, ItemFactory.crearEtiquetaPreparacion(false));
-            player.playNotifySound(com.yessenia.escondite.sound.ModSounds.ORBE_NO_LISTO, SoundSource.MASTER, 1.0f, 1.0f);
+            player.playNotifySound(ModSounds.ORBE_NO_LISTO, SoundSource.MASTER, 1.0f, 1.0f);
         } else {
             listos.add(uuid);
             player.getInventory().setItem(0, ItemFactory.crearEtiquetaPreparacion(true));
-            player.playNotifySound(com.yessenia.escondite.sound.ModSounds.ORBE_LISTO, SoundSource.MASTER, 1.0f, 1.0f);
+            player.playNotifySound(ModSounds.ORBE_LISTO, SoundSource.MASTER, 1.0f, 1.0f);
         }
-
     }
 
     public void clicGalletaAnfitrion(ServerPlayer player, MinecraftServer server) {
@@ -226,12 +228,18 @@ public class ArenaSession {
 
         if (estado == GameState.SUBLOBBY_ESPERA) {
             if (jugadores.size() < 2) {
-                player.displayClientMessage(Component.literal("§cAt least 2 players are required to start."), true);
+                player.displayClientMessage(
+                        Component.translatable("message.escondite.min_players_start").withStyle(ChatFormatting.RED),
+                        true
+                );
                 return;
             }
             for (UUID id : jugadores) {
                 if (!id.equals(anfitrion) && !listos.contains(id)) {
-                    player.displayClientMessage(Component.literal("§cSome players are not marked Ready yet."), true);
+                    player.displayClientMessage(
+                            Component.translatable("message.escondite.players_not_ready").withStyle(ChatFormatting.RED),
+                            true
+                    );
                     return;
                 }
             }
@@ -239,17 +247,20 @@ public class ArenaSession {
             ticksRestantes = 200; // 10 segundos
             asignarItemsSubLobby(player);
         } else if (estado == GameState.CUENTA_REGRESIVA_INICIO) {
-            cancelarCuentaRegresiva(server, "§cStart canceled by the host.");
+            cancelarCuentaRegresiva(server, "message.escondite.start_cancelled_host", ChatFormatting.RED);
         } else if (estado == GameState.ENTRE_RONDAS) {
             if (jugadores.size() < 2) {
-                player.displayClientMessage(Component.literal("§cAt least 2 players are required for the next round."), true);
+                player.displayClientMessage(
+                        Component.translatable("message.escondite.min_players_round").withStyle(ChatFormatting.RED),
+                        true
+                );
                 return;
             }
             estado = GameState.CUENTA_REGRESIVA_SORTEO;
             ticksRestantes = 100; // 5 segundos
             asignarItemsSubLobby(player);
         } else if (estado == GameState.CUENTA_REGRESIVA_SORTEO) {
-            cancelarCuentaSiguienteRonda(server, "§cCountdown canceled by the host.");
+            cancelarCuentaSiguienteRonda(server, "message.escondite.countdown_cancelled_host", ChatFormatting.RED);
         }
     }
 
@@ -268,31 +279,36 @@ public class ArenaSession {
                 roles.put(id, PlayerRole.NINGUNO);
                 actualizarEquipoVisual(p, PlayerRole.NINGUNO, server);
                 asignarItemsSubLobby(p);
-                enviarTitle(p, "§cGAME ENDED", "§7Back to waiting room", 5, 40, 10);
+                enviarTitle(
+                        p,
+                        Component.translatable("title.escondite.game_ended").withStyle(ChatFormatting.RED),
+                        Component.translatable("title.escondite.back_to_waiting").withStyle(ChatFormatting.GRAY),
+                        5, 40, 10
+                );
             }
         }
     }
 
-    private void cancelarCuentaRegresiva(MinecraftServer server, String motivo) {
+    private void cancelarCuentaRegresiva(MinecraftServer server, String key, ChatFormatting color) {
         estado = GameState.SUBLOBBY_ESPERA;
         ticksRestantes = 0;
         for (UUID id : jugadores) {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) {
                 if (id.equals(anfitrion)) asignarItemsSubLobby(p);
-                p.displayClientMessage(Component.literal(motivo), true);
+                p.displayClientMessage(Component.translatable(key).withStyle(color), true);
             }
         }
     }
 
-    private void cancelarCuentaSiguienteRonda(MinecraftServer server, String motivo) {
+    private void cancelarCuentaSiguienteRonda(MinecraftServer server, String key, ChatFormatting color) {
         estado = GameState.ENTRE_RONDAS;
         ticksRestantes = 0;
         for (UUID id : jugadores) {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) {
                 if (id.equals(anfitrion)) asignarItemsSubLobby(p);
-                p.displayClientMessage(Component.literal(motivo), true);
+                p.displayClientMessage(Component.translatable(key).withStyle(color), true);
             }
         }
     }
@@ -337,7 +353,12 @@ public class ArenaSession {
 
                 if (rest % 20 == 0 && rest > 0) {
                     int seg = rest / 20;
-                    enviarTitle(infPlayer, "§c§lYOU WERE FOUND!", "§eReturning in §f" + seg + "s...", 0, 22, 0);
+                    enviarTitle(
+                            infPlayer,
+                            Component.translatable("title.escondite.found").withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+                            Component.translatable("title.escondite.returning_in", seg).withStyle(ChatFormatting.YELLOW),
+                            0, 22, 0
+                    );
                     infPlayer.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.MASTER, 1.0f, 1.2f);
                 }
 
@@ -345,7 +366,12 @@ public class ArenaSession {
                 if (rest <= 0) {
                     itInf.remove();
                     data.spawnArena.teleport(infPlayer, server);
-                    enviarTitle(infPlayer, "§c§lSEEK!", "", 0, 25, 5);
+                    enviarTitle(
+                            infPlayer,
+                            Component.translatable("title.escondite.seek").withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+                            Component.empty(),
+                            0, 25, 5
+                    );
                     infPlayer.playNotifySound(SoundEvents.ENDER_DRAGON_GROWL, SoundSource.MASTER, 0.7f, 1.2f);
                 } else {
                     entry.setValue(rest);
@@ -374,7 +400,12 @@ public class ArenaSession {
             for (UUID id : jugadores) {
                 ServerPlayer p = server.getPlayerList().getPlayer(id);
                 if (p != null) {
-                    enviarTitle(p, "§6§l" + seg, "§eGetting ready to start...", 0, 22, 0);
+                    enviarTitle(
+                            p,
+                            Component.literal(String.valueOf(seg)).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
+                            Component.translatable("title.escondite.getting_ready").withStyle(ChatFormatting.YELLOW),
+                            0, 22, 0
+                    );
                     p.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.MASTER, 1.0f, 1.0f);
                 }
             }
@@ -391,7 +422,12 @@ public class ArenaSession {
             for (UUID id : jugadores) {
                 ServerPlayer p = server.getPlayerList().getPlayer(id);
                 if (p != null) {
-                    enviarTitle(p, "§6§l" + seg, "§eNext round...", 0, 22, 0);
+                    enviarTitle(
+                            p,
+                            Component.literal(String.valueOf(seg)).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
+                            Component.translatable("title.escondite.next_round").withStyle(ChatFormatting.YELLOW),
+                            0, 22, 0
+                    );
                     p.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.MASTER, 1.0f, 1.0f);
                 }
             }
@@ -461,7 +497,10 @@ public class ArenaSession {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) {
                 p.getInventory().clearContent();
-                p.displayClientMessage(Component.literal("§bDraw started"), true);
+                p.displayClientMessage(
+                        Component.translatable("message.escondite.draw_started").withStyle(ChatFormatting.AQUA),
+                        true
+                );
             }
         }
     }
@@ -480,10 +519,20 @@ public class ArenaSession {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) {
                 if (esFinal) {
-                    enviarTitle(p, "§c§lThe seeker is", "§e§l" + nombreActual, 0, 40, 10);
+                    enviarTitle(
+                            p,
+                            Component.translatable("title.escondite.seeker_is").withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+                            Component.literal(nombreActual).withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD),
+                            0, 40, 10
+                    );
                     p.playNotifySound(ModSounds.RULETA_GANADOR, SoundSource.MASTER, 1.0f, 1.0f);
                 } else {
-                    enviarTitle(p, "§c§lThe seeker is", "§f" + nombreActual, 0, 15, 0);
+                    enviarTitle(
+                            p,
+                            Component.translatable("title.escondite.seeker_is").withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+                            Component.literal(nombreActual).withStyle(ChatFormatting.WHITE),
+                            0, 15, 0
+                    );
                     p.playNotifySound(ModSounds.RULETA_TICK, SoundSource.MASTER, 0.7f, 1.4f);
                 }
             }
@@ -539,7 +588,12 @@ public class ArenaSession {
                 for (UUID id : jugadores) {
                     ServerPlayer p = server.getPlayerList().getPlayer(id);
                     if (p == null) continue;
-                    enviarTitle(p, "", "§e" + seg + " seconds to hide", 0, 22, 5);
+                    enviarTitle(
+                            p,
+                            Component.empty(),
+                            Component.translatable("title.escondite.seconds_to_hide", seg).withStyle(ChatFormatting.YELLOW),
+                            0, 22, 5
+                    );
                     p.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.MASTER, 1.0f, 1.2f);
                 }
             }
@@ -565,7 +619,12 @@ public class ArenaSession {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p == null) continue;
 
-            enviarTitle(p, "§c§lSEEK!", "", 5, 30, 10);
+            enviarTitle(
+                    p,
+                    Component.translatable("title.escondite.seek").withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+                    Component.empty(),
+                    5, 30, 10
+            );
             p.playNotifySound(SoundEvents.ENDER_DRAGON_GROWL, SoundSource.MASTER, 0.8f, 1.0f);
 
             if (roles.get(id) == PlayerRole.BUSCADOR) {
@@ -585,7 +644,12 @@ public class ArenaSession {
                 for (UUID id : jugadores) {
                     ServerPlayer p = server.getPlayerList().getPlayer(id);
                     if (p == null) continue;
-                    enviarTitle(p, "", "§c§l" + formato, 0, 22, 0);
+                    enviarTitle(
+                            p,
+                            Component.empty(),
+                            Component.literal(formato).withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+                            0, 22, 0
+                    );
                     p.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.MASTER, 1.0f, 1.5f);
                 }
             }
@@ -622,13 +686,26 @@ public class ArenaSession {
         infectadosEsperaTicks.put(uuid, 100);
 
         String nombreVictima = victima.getName().getString();
-        String nombreAtacante = atacante != null ? atacante.getName().getString() : "a Seeker";
+        Component atacanteComp = atacante != null
+                ? Component.literal(atacante.getName().getString()).withStyle(ChatFormatting.RED)
+                : Component.translatable("message.escondite.a_seeker").withStyle(ChatFormatting.RED);
+
+        Component mensajeCaught = Component.literal(nombreVictima).withStyle(ChatFormatting.RED)
+                .append(Component.literal(" "))
+                .append(Component.translatable("message.escondite.caught_by", "", "").withStyle(ChatFormatting.WHITE));
 
         for (UUID id : jugadores) {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) {
                 p.playNotifySound(ModSounds.ATRAPADO, SoundSource.MASTER, 0.9f, 1.0f);
-                p.displayClientMessage(Component.literal("§c" + nombreVictima + " §fwas caught by §c" + nombreAtacante + "§f."), true);
+                p.displayClientMessage(
+                        Component.translatable(
+                                "message.escondite.caught_by",
+                                Component.literal(nombreVictima).withStyle(ChatFormatting.RED),
+                                atacanteComp
+                        ),
+                        true
+                );
             }
         }
 
@@ -658,7 +735,7 @@ public class ArenaSession {
             else if (r == PlayerRole.ESCONDIDO) listaEscondidos.add(p.getName().getString());
         }
 
-        String faseTexto = (estado == GameState.ESCONDIENDOSE) ? "Hiding" : "Seeking";
+        String faseKey = (estado == GameState.ESCONDIENDOSE) ? "hud.escondite.phase.hiding" : "hud.escondite.phase.seeking";
         int segs = Math.max(0, ticksRestantes / 20);
         String nombre = data.nombreDisplay != null ? data.nombreDisplay : data.id;
 
@@ -666,7 +743,7 @@ public class ArenaSession {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p == null) continue;
             PlayerRole r = roles.getOrDefault(id, PlayerRole.NINGUNO);
-            ServerPlayNetworking.send(p, new HudSyncPayload(true, r.name(), nombre, faseTexto, segs, listaBuscadores, listaEscondidos));
+            ServerPlayNetworking.send(p, new HudSyncPayload(true, r.name(), nombre, faseKey, segs, listaBuscadores, listaEscondidos));
         }
     }
 
@@ -680,7 +757,10 @@ public class ArenaSession {
 
         if (estado == GameState.SORTEO) {
             data.spawnSubLobby.teleport(player, server);
-            player.displayClientMessage(Component.literal("§eWaiting for the draw to finish..."), true);
+            player.displayClientMessage(
+                    Component.translatable("message.escondite.waiting_draw").withStyle(ChatFormatting.YELLOW),
+                    true
+            );
             return;
         }
 
@@ -704,7 +784,13 @@ public class ArenaSession {
 
         ServerPlayer objetivo = buscadores.get(siguiente);
         espectador.setCamera(objetivo);
-        espectador.displayClientMessage(Component.literal("§bWhatching: §f" + objetivo.getName().getString() + " §7| Use left/right click to switch seekers"), true);
+        espectador.displayClientMessage(
+                Component.translatable(
+                        "message.escondite.watching_seeker",
+                        Component.literal(objetivo.getName().getString()).withStyle(ChatFormatting.WHITE)
+                ).withStyle(ChatFormatting.AQUA),
+                true
+        );
     }
 
     private void actualizarEspectadores(MinecraftServer server) {
@@ -731,7 +817,13 @@ public class ArenaSession {
             }
 
             if (server.getTickCount() % 20 == 0 && esp.getCamera() instanceof ServerPlayer obj) {
-                esp.displayClientMessage(Component.literal("§bWatching: §f" + obj.getName().getString() + " §7| Use left/right click to switch seekers"), true);
+                esp.displayClientMessage(
+                        Component.translatable(
+                                "message.escondite.watching_seeker",
+                                Component.literal(obj.getName().getString()).withStyle(ChatFormatting.WHITE)
+                        ).withStyle(ChatFormatting.AQUA),
+                        true
+                );
             }
         }
     }
@@ -777,7 +869,9 @@ public class ArenaSession {
         indiceCamaraBuscador.clear();
         infectadosEsperaTicks.clear();
 
-        String tituloGanador = gananBuscadores ? "§c§lSEEKERS WIN!" : "§a§lHIDERS WIN!";
+        Component tituloGanador = gananBuscadores
+                ? Component.translatable("title.escondite.seekers_win").withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
+                : Component.translatable("title.escondite.hiders_win").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD);
 
         // Verificar si ya TODOS los presentes fueron buscadores
         boolean todosYaBuscaron = !jugadores.isEmpty();
@@ -806,7 +900,12 @@ public class ArenaSession {
                     ConfigManager.get().lobbyGeneral.teleport(p, server);
                 }
                 actualizarEquipoVisual(p, PlayerRole.NINGUNO, server);
-                enviarTitle(p, "§6§lGAME OVER", tituloGanador, 5, 60, 15);
+                enviarTitle(
+                        p,
+                        Component.translatable("title.escondite.game_over").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
+                        tituloGanador,
+                        5, 60, 15
+                );
             }
         } else {
             estado = GameState.ENTRE_RONDAS;
@@ -823,7 +922,12 @@ public class ArenaSession {
                 data.spawnSubLobby.teleport(p, server);
                 actualizarEquipoVisual(p, PlayerRole.NINGUNO, server);
                 asignarItemsSubLobby(p);
-                enviarTitle(p, tituloGanador, "§eWaiting for next round...", 5, 50, 10);
+                enviarTitle(
+                        p,
+                        tituloGanador,
+                        Component.translatable("title.escondite.waiting_next_round").withStyle(ChatFormatting.YELLOW),
+                        5, 50, 10
+                );
             }
         }
     }
@@ -846,9 +950,9 @@ public class ArenaSession {
         return estado == GameState.SORTEO || estado == GameState.ESCONDIENDOSE || estado == GameState.BUSCANDO;
     }
 
-    public static void enviarTitle(ServerPlayer player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+    public static void enviarTitle(ServerPlayer player, Component title, Component subtitle, int fadeIn, int stay, int fadeOut) {
         player.connection.send(new ClientboundSetTitlesAnimationPacket(fadeIn, stay, fadeOut));
-        player.connection.send(new ClientboundSetTitleTextPacket(Component.literal(title)));
-        player.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal(subtitle)));
+        player.connection.send(new ClientboundSetTitleTextPacket(title));
+        player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
     }
 }

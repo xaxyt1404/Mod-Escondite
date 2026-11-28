@@ -2,7 +2,9 @@ package com.yessenia.escondite.game;
 
 import com.yessenia.escondite.config.ArenaData;
 import com.yessenia.escondite.config.ConfigManager;
+import com.yessenia.escondite.entity.PortalManager;
 import com.yessenia.escondite.network.SkinNetworkManager;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -10,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -32,7 +35,10 @@ public class GameManager {
     public static void entrarArena(ServerPlayer player, String arenaId, MinecraftServer server) {
         ArenaData data = ConfigManager.get().arenas.get(arenaId.toLowerCase());
         if (data == null || !data.habilitada) {
-            player.displayClientMessage(Component.literal("§cThis arena is not available."), true);
+            player.displayClientMessage(
+                    Component.translatable("message.escondite.arena_unavailable").withStyle(ChatFormatting.RED),
+                    true
+            );
             return;
         }
         salirArenaActual(player, server, false);
@@ -99,14 +105,14 @@ public class GameManager {
         }
 
         if (server.getTickCount() % 20 == 0) {
-            com.yessenia.escondite.entity.PortalManager.sincronizarPortales(server);
+            PortalManager.sincronizarPortales(server);
         }
     }
 
     public static void eliminarSesion(String arenaId, MinecraftServer server) {
         ArenaSession sesion = sesiones.remove(arenaId.toLowerCase());
         if (sesion != null) {
-            for (UUID id : new java.util.ArrayList<>(sesion.jugadores)) {
+            for (UUID id : new ArrayList<>(sesion.jugadores)) {
                 ServerPlayer p = server.getPlayerList().getPlayer(id);
                 if (p != null) {
                     enviarALobbyGeneral(p, server);

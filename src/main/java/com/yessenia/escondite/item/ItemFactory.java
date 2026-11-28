@@ -1,5 +1,6 @@
 package com.yessenia.escondite.item;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
@@ -22,7 +23,11 @@ public class ItemFactory {
     public static ItemStack crearEtiquetaPreparacion(boolean listo) {
         ItemStack stack = new ItemStack(ModItems.ORBE_PREPARACION);
         stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(listo ? 1 : 0));
-        stack.set(DataComponents.ITEM_NAME, Component.literal(listo ? "§a§lPreparación: LISTO" : "§c§lPreparación: NO LISTO"));
+        stack.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable(listo ? "item.escondite.orbe_preparacion.ready" : "item.escondite.orbe_preparacion.not_ready")
+                        .withStyle(listo ? ChatFormatting.GREEN : ChatFormatting.RED, ChatFormatting.BOLD)
+        );
         return stack;
     }
 
@@ -30,28 +35,49 @@ public class ItemFactory {
         ItemStack stack = new ItemStack(ModItems.BACULO_ANFITRION);
         stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(contando ? 1 : 0));
         if (contando) {
-            stack.set(DataComponents.ITEM_NAME, Component.literal("§c§lCancelar inicio"));
+            stack.set(
+                    DataComponents.ITEM_NAME,
+                    Component.translatable("item.escondite.baculo_anfitrion.cancel")
+                            .withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
+            );
         } else {
-            stack.set(DataComponents.ITEM_NAME, Component.literal(esEntreRondas ? "§e§lIniciar ronda" : "§e§lIniciar partida"));
+            String key = esEntreRondas ? "item.escondite.baculo_anfitrion.start_round" : "item.escondite.baculo_anfitrion.start_game";
+            stack.set(
+                    DataComponents.ITEM_NAME,
+                    Component.translatable(key)
+                            .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+            );
         }
         return stack;
     }
 
     public static ItemStack crearPalaTerminar() {
         ItemStack stack = new ItemStack(ModItems.MARTILLO_JUEZ);
-        stack.set(DataComponents.ITEM_NAME, Component.literal("§4§lTerminar partida"));
+        stack.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable("item.escondite.martillo_juez")
+                        .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD)
+        );
         return stack;
     }
 
     public static ItemStack crearPuertaSalir() {
         ItemStack stack = new ItemStack(ModItems.PUERTA_HOGAR);
-        stack.set(DataComponents.ITEM_NAME, Component.literal("§c§lVolver a Inicio"));
+        stack.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable("item.escondite.puerta_hogar")
+                        .withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
+        );
         return stack;
     }
 
     public static ItemStack crearGestorArenas() {
         ItemStack stack = new ItemStack(ModItems.GESTOR_ARENAS);
-        stack.set(DataComponents.ITEM_NAME, Component.literal("§b§lGestor de Arenas"));
+        stack.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable("item.escondite.gestor_arenas")
+                        .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
+        );
         return stack;
     }
 
@@ -59,19 +85,31 @@ public class ItemFactory {
         player.getInventory().clearContent();
 
         ItemStack castigo = new ItemStack(ModItems.CASTIGO);
-        castigo.set(DataComponents.ITEM_NAME, Component.literal("§c§lCastigo"));
+        castigo.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable("item.escondite.castigo")
+                        .withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
+        );
         Holder<Enchantment> fireAspect = registries.lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.FIRE_ASPECT);
         castigo.enchant(fireAspect, 2);
         player.getInventory().setItem(0, castigo);
 
         ItemStack pocionLentitud = PotionContents.createItemStack(Items.SPLASH_POTION, Potions.SLOWNESS);
         pocionLentitud.setCount(3);
-        pocionLentitud.set(DataComponents.ITEM_NAME, Component.literal("§9Poción de Lentitud"));
+        pocionLentitud.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable("item.escondite.slowness_potion")
+                        .withStyle(ChatFormatting.BLUE)
+        );
         player.getInventory().setItem(1, pocionLentitud);
 
         ItemStack pocionVeneno = PotionContents.createItemStack(Items.SPLASH_POTION, Potions.STRONG_POISON);
         pocionVeneno.setCount(3);
-        pocionVeneno.set(DataComponents.ITEM_NAME, Component.literal("§2Poción de Veneno II"));
+        pocionVeneno.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable("item.escondite.poison_potion")
+                        .withStyle(ChatFormatting.DARK_GREEN)
+        );
         player.getInventory().setItem(2, pocionVeneno);
     }
 
@@ -79,18 +117,30 @@ public class ItemFactory {
         player.getInventory().clearContent();
 
         ItemStack palitroque = new ItemStack(ModItems.PALITROQUE);
-        palitroque.set(DataComponents.ITEM_NAME, Component.literal("§a§lPalitroque"));
+        palitroque.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable("item.escondite.palitroque")
+                        .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)
+        );
         Holder<Enchantment> knockback = registries.lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.KNOCKBACK);
         palitroque.enchant(knockback, 3); // Empuje III
         player.getInventory().setItem(0, palitroque);
 
         ItemStack bolas = new ItemStack(Items.SNOWBALL, 16);
-        bolas.set(DataComponents.ITEM_NAME, Component.literal("§fBolas de Nieve Infinitas"));
+        bolas.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable("item.escondite.infinite_snowballs")
+                        .withStyle(ChatFormatting.WHITE)
+        );
         player.getInventory().setItem(1, bolas);
 
         ItemStack cohetes = new ItemStack(Items.FIREWORK_ROCKET, 16);
         cohetes.set(DataComponents.FIREWORKS, new Fireworks(1, List.of()));
-        cohetes.set(DataComponents.ITEM_NAME, Component.literal("§dCohetes Infinitos"));
+        cohetes.set(
+                DataComponents.ITEM_NAME,
+                Component.translatable("item.escondite.infinite_fireworks")
+                        .withStyle(ChatFormatting.LIGHT_PURPLE)
+        );
         player.getInventory().setItem(2, cohetes);
     }
 

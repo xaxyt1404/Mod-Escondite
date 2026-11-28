@@ -6,6 +6,7 @@ import com.yessenia.escondite.game.ArenaSession;
 import com.yessenia.escondite.game.GameManager;
 import com.yessenia.escondite.game.GameState;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -71,15 +72,15 @@ public class PortalManager {
 
     private static String construirTextoEstado(ArenaData arena) {
         if (!arena.habilitada) {
-            return "§cDisabled";
+            return "§c" + Component.translatable("hud.escondite.portal.disabled").getString();
         }
         ArenaSession sesion = GameManager.getSesion(arena.id);
         int cantJugadores = (sesion != null) ? sesion.jugadores.size() : 0;
         boolean enCurso = (sesion != null && (sesion.estado == GameState.ESCONDIENDOSE || sesion.estado == GameState.BUSCANDO));
 
         if (enCurso) {
-            return "§eIn game §7(" + cantJugadores + " players.)";
+            return "§e" + Component.translatable("hud.escondite.portal.in_game", cantJugadores).getString();
         }
-        return "§aAvailable §7(" + cantJugadores + " players.)";
+        return "§a" + Component.translatable("hud.escondite.portal.available", cantJugadores).getString();
     }
 }

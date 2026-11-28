@@ -543,7 +543,6 @@ public class ArenaSession {
         } else {
             indiceRuleta++;
             pasosRuletaActuales++;
-            // Desaceleración progresiva
             double progreso = (double) pasosRuletaActuales / pasosRuletaTotales;
             if (progreso < 0.5) ticksHastaSiguientePaso = 2;
             else if (progreso < 0.75) ticksHastaSiguientePaso = 4;
@@ -665,7 +664,6 @@ public class ArenaSession {
         UUID uuid = victima.getUUID();
         if (roles.get(uuid) != PlayerRole.ESCONDIDO) return;
 
-        // 1. Restaurar salud, apagar fuego y limpiar efectos (inmediato y en el siguiente tick)
         victima.setHealth(victima.getMaxHealth());
         victima.setRemainingFireTicks(0);
         victima.clearFire();
@@ -676,12 +674,10 @@ public class ArenaSession {
             victima.removeAllEffects();
         });
 
-        // 2. Cambiar rol a BUSCADOR, actualizar equipo TAB y asignar kit
         roles.put(uuid, PlayerRole.BUSCADOR);
         actualizarEquipoVisual(victima, PlayerRole.BUSCADOR, server);
         ItemFactory.darKitBuscador(victima, server.registryAccess());
 
-        // 3. Teletransportar a la sala 3x3 del buscador e iniciar espera de 5s (100 ticks)
         data.spawnEsperaBuscador.teleport(victima, server);
         infectadosEsperaTicks.put(uuid, 100);
 
@@ -689,10 +685,6 @@ public class ArenaSession {
         Component atacanteComp = atacante != null
                 ? Component.literal(atacante.getName().getString()).withStyle(ChatFormatting.RED)
                 : Component.translatable("message.escondite.a_seeker").withStyle(ChatFormatting.RED);
-
-        Component mensajeCaught = Component.literal(nombreVictima).withStyle(ChatFormatting.RED)
-                .append(Component.literal(" "))
-                .append(Component.translatable("message.escondite.caught_by", "", "").withStyle(ChatFormatting.WHITE));
 
         for (UUID id : jugadores) {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
@@ -709,7 +701,6 @@ public class ArenaSession {
             }
         }
 
-        // 4. Verificar si era el último escondido
         verificarCondicionesFinRonda(server);
     }
 
@@ -873,7 +864,6 @@ public class ArenaSession {
                 ? Component.translatable("title.escondite.seekers_win").withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
                 : Component.translatable("title.escondite.hiders_win").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD);
 
-        // Verificar si ya TODOS los presentes fueron buscadores
         boolean todosYaBuscaron = !jugadores.isEmpty();
         for (UUID id : jugadores) {
             if (!yaFueronBuscadores.contains(id)) {

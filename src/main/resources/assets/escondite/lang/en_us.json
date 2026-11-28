@@ -92,5 +92,14 @@
   "screen.escondite.gestor.btn.remove_portal": "Remove Floating Portal",
   "screen.escondite.gestor.btn.delete_arena": "Delete Arena '%s'",
   "screen.escondite.gestor.btn.confirm_delete": "YES, DELETE ALL!",
-  "screen.escondite.gestor.btn.cancel": "Cancel"
+  "screen.escondite.gestor.btn.cancel": "Cancel",
+
+  "hud.escondite.phase.hiding": "Hiding",
+  "hud.escondite.phase.seeking": "Seeking",
+  "hud.escondite.team.seekers": "Seekers (%s):",
+  "hud.escondite.team.hiders": "Hiders (%s):",
+  "hud.escondite.team.none": "- None",
+  "hud.escondite.portal.disabled": "Disabled",
+  "hud.escondite.portal.available": "Available (%s players)",
+  "hud.escondite.portal.in_game": "In game (%s players)"
 }

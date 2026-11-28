@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
@@ -161,15 +162,20 @@ public abstract class GuiFoodMixin {
 		int screenW = graphics.guiWidth();
 		int screenH = graphics.guiHeight();
 
+		String faseTraducida = (ClientHudStorage.fase != null && !ClientHudStorage.fase.isEmpty())
+				? Component.translatable(ClientHudStorage.fase).getString()
+				: "";
+
 		int min = ClientHudStorage.segundosRestantes / 60;
 		int seg = ClientHudStorage.segundosRestantes % 60;
 		String relojTexto = String.format("%02d:%02d", min, seg);
 		boolean ultimos30 = ClientHudStorage.segundosRestantes <= 30 && ClientHudStorage.segundosRestantes > 0;
 
-		String headerBuscadores = "Buscadores (" + ClientHudStorage.buscadores.size() + "):";
-		String headerEscondidos = "Escondidos (" + ClientHudStorage.escondidos.size() + "):";
+		String headerBuscadores = Component.translatable("hud.escondite.team.seekers", ClientHudStorage.buscadores.size()).getString();
+		String headerEscondidos = Component.translatable("hud.escondite.team.hiders", ClientHudStorage.escondidos.size()).getString();
+		String textoNinguno = Component.translatable("hud.escondite.team.none").getString();
 
-		int maxTextoW = Math.max(font.width(ClientHudStorage.nombreArena), font.width(ClientHudStorage.fase));
+		int maxTextoW = Math.max(font.width(ClientHudStorage.nombreArena), font.width(faseTraducida));
 		maxTextoW = Math.max(maxTextoW, (int) Math.ceil(font.width(relojTexto) * 1.15f));
 		maxTextoW = Math.max(maxTextoW, font.width(headerBuscadores));
 		maxTextoW = Math.max(maxTextoW, font.width(headerEscondidos));
@@ -195,7 +201,7 @@ public abstract class GuiFoodMixin {
 		graphics.fill(x + 1, y + 1, x + anchoPanel - 1, y + 13, 0x881E293B);
 
 		graphics.drawCenteredString(font, "§b" + ClientHudStorage.nombreArena, x + anchoPanel / 2, y + 3, 0xFFFFFF);
-		graphics.drawCenteredString(font, "§7" + ClientHudStorage.fase, x + anchoPanel / 2, y + 16, 0xCCCCCC);
+		graphics.drawCenteredString(font, "§7" + faseTraducida, x + anchoPanel / 2, y + 16, 0xCCCCCC);
 
 		int relojY = y + 27;
 		if (ultimos30) {
@@ -215,7 +221,7 @@ public abstract class GuiFoodMixin {
 		graphics.drawString(font, "§c" + headerBuscadores, x + 5, cursorY, 0xFF5555);
 		cursorY += 10;
 		if (ClientHudStorage.buscadores.isEmpty()) {
-			graphics.drawString(font, "§8- Ninguno", x + 8, cursorY, 0x888888);
+			graphics.drawString(font, "§8" + textoNinguno, x + 8, cursorY, 0x888888);
 			cursorY += 10;
 		} else {
 			for (String nombre : ClientHudStorage.buscadores) {
@@ -229,7 +235,7 @@ public abstract class GuiFoodMixin {
 		graphics.drawString(font, "§a" + headerEscondidos, x + 5, cursorY, 0x55FF55);
 		cursorY += 10;
 		if (ClientHudStorage.escondidos.isEmpty()) {
-			graphics.drawString(font, "§8- Ninguno", x + 8, cursorY, 0x888888);
+			graphics.drawString(font, "§8" + textoNinguno, x + 8, cursorY, 0x888888);
 		} else {
 			for (String nombre : ClientHudStorage.escondidos) {
 				graphics.drawString(font, "§a• " + nombre, x + 8, cursorY, 0x77FF77);
